@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Activity, Shield, FileText, Calendar, AlertCircle, ArrowRight } from 'lucide-react';
 import styles from './HomePage.module.scss';
 
@@ -47,10 +48,12 @@ const HomePage = () => {
             с помощью технологий искусственного интеллекта
           </p>
 
-          <button className={styles.ctaButton}>
-            Начать диагностику
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </button>
+          <Link to={'/main'}>
+            <button className={styles.ctaButton}>
+              Начать диагностику
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </button>
+          </Link>
         </div>
 
         <div className={styles.features}>
