@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Activity, Shield, FileText, Calendar, AlertCircle, ArrowRight } from 'lucide-react';
 import styles from './HomePage.module.scss';
 
@@ -7,7 +8,7 @@ const HomePage = () => {
 
   useEffect(() => {
     setIsVisible(true);
-  }, []); // Пустой массив зависимостей обеспечивает однократный запуск эффекта после первого рендера
+  }, []);
 
   const features = [
     {
@@ -47,19 +48,18 @@ const HomePage = () => {
             с помощью технологий искусственного интеллекта
           </p>
 
-          {/* Кнопка с ссылкой для перехода на страницу диагностики */}
-          <a href="/diagnostics">
+          <Link to={'/main'}>
             <button className={styles.ctaButton}>
               Начать диагностику
               <ArrowRight className="w-5 h-5 ml-2" />
             </button>
-          </a>
-        </div> {/* Закрывающий тег для div.hero */}
+          </Link>
+        </div>
 
         <div className={styles.features}>
           {features.map((feature, index) => (
             <div
-              key={index} // Для статичного списка использование индекса допустимо, но для динамического лучше использовать уникальный id
+              key={index}
               className={styles.featureCard}
               style={{ animationDelay: `${index * 0.2}s` }}
             >
@@ -118,8 +118,8 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </div> {/* Закрывающий тег для div.content */}
-    </div> // Закрывающий тег для div.container
+      </div>
+    </div>
   );
 };
 
