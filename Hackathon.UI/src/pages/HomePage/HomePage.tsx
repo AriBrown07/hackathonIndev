@@ -7,7 +7,7 @@ const HomePage = () => {
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+  }, []); // Пустой массив зависимостей обеспечивает однократный запуск эффекта после первого рендера
 
   const features = [
     {
@@ -47,16 +47,19 @@ const HomePage = () => {
             с помощью технологий искусственного интеллекта
           </p>
 
-          <button className={styles.ctaButton}>
-            Начать диагностику
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </button>
-        </div>
+          {/* Кнопка с ссылкой для перехода на страницу диагностики */}
+          <a href="/diagnostics">
+            <button className={styles.ctaButton}>
+              Начать диагностику
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </button>
+          </a>
+        </div> {/* Закрывающий тег для div.hero */}
 
         <div className={styles.features}>
           {features.map((feature, index) => (
             <div
-              key={index}
+              key={index} // Для статичного списка использование индекса допустимо, но для динамического лучше использовать уникальный id
               className={styles.featureCard}
               style={{ animationDelay: `${index * 0.2}s` }}
             >
@@ -115,8 +118,8 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div> {/* Закрывающий тег для div.content */}
+    </div> // Закрывающий тег для div.container
   );
 };
 
