@@ -5,7 +5,7 @@ import HomePage from '../pages/HomePage/HomePage';
 import FacePage from '../pages/FacePage/FacePage';
 import Diagnostics from '../pages/Diagnostics/Diagnostics';
 import Authorization from '../pages/Authorization/Authorization';
-
+import Coupons from '../pages/Coupons/Coupons';
 const handleAuthSuccess = () => {
     console.log("Авторизация прошла успешно!");
     // например, редирект на другую страницу:
@@ -21,7 +21,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/main" element={<FacePage />} />
         <Route path="/Diagnostics" element={<Diagnostics />} />
         <Route path="/Authorization" element={<Authorization onAuthSuccess={handleAuthSuccess}  />} />
-
+        <Route path="/Coupons" element={<Coupons />} />
     </Routes>
   );
 };
