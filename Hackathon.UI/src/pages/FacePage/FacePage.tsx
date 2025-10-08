@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Camera, Upload } from 'lucide-react';
+import Questionnaire from '../Questionnaire/Questionnaire';
 import styles from './FacePage.module.scss';
+
+import type { HealthQuestionnaire } from '../../types';
 
 export default function FaceScanner() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [resultAnimation, setResultAnimation] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,7 +24,7 @@ export default function FaceScanner() {
         video: { facingMode: 'user' },
         audio: false,
       });
-      // ВАЖНО: сначала сохраняем поток и включаем камеру
+
       setStream(mediaStream);
       setIsCameraActive(true);
     } catch (error) {
@@ -28,7 +33,6 @@ export default function FaceScanner() {
     }
   };
 
-  // Привязываем stream к <video>, когда он смонтирован
   useEffect(() => {
     if (isCameraActive && videoRef.current && stream) {
       videoRef.current.srcObject = stream;
@@ -38,7 +42,6 @@ export default function FaceScanner() {
     }
   }, [isCameraActive, stream]);
 
-  // Чистим треки при размонтировании
   useEffect(() => {
     return () => {
       if (stream) {
@@ -86,22 +89,39 @@ export default function FaceScanner() {
 
   const startScanning = () => {
     setIsScanning(true);
+    // Показываем анкету сразу при начале сканирования
+    setTimeout(() => {
+      setShowQuestionnaire(true);
+    }, 500);
+  };
+
+  const handleQuestionnaireComplete = (questionnaireData: HealthQuestionnaire) => {
+    console.log('Анкета заполнена, данные:', questionnaireData);
+
+    setShowQuestionnaire(false);
+
     setTimeout(() => {
       setIsScanning(false);
       setShowResult(true);
-    }, 3000);
+      setResultAnimation(true);
+    }, 300);
   };
 
   const reset = () => {
     setPhoto(null);
     setShowResult(false);
+    setShowQuestionnaire(false);
     setIsScanning(false);
     stopCamera();
   };
 
+  const handleQuestionnaireClose = () => {
+    setShowQuestionnaire(false);
+  };
+
   return (
     <div className={styles.container}>
-      <div className={styles.content}>
+      <div className={`${styles.content} ${showQuestionnaire ? styles.blurred : ''}`}>
         {!photo && !isCameraActive && (
           <div className={styles.uploadSection}>
             <h1 className={styles.title}>Сканирование лица</h1>
@@ -144,8 +164,6 @@ export default function FaceScanner() {
               />
             </div>
 
-            {/* Вариант 1: заменить на cameraControls,
-                Вариант 2: добавить алиас в SCSS */}
             <div className={styles.captureControls}>
               <button className={styles.captureMainButton} onClick={capturePhoto}>
                 Сделать снимок
@@ -157,7 +175,7 @@ export default function FaceScanner() {
           </div>
         )}
 
-        {photo && !showResult && (
+        {photo && isScanning && (
           <div className={styles.scanningSection}>
             <div className={styles.photoWrapper}>
               <img src={photo} alt="Captured" className={styles.photo} />
@@ -172,7 +190,7 @@ export default function FaceScanner() {
         )}
 
         {showResult && (
-          <div className={styles.resultSection}>
+          <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>
             <div className={styles.leftPanel}>
               <div className={styles.photoContainer}>
                 <img src={photo!} alt="Scanned face" className={styles.resultPhoto} />
@@ -185,7 +203,10 @@ export default function FaceScanner() {
             <div className={styles.rightPanel}>
               <div className={styles.resultCard}>
                 <h2 className={styles.resultTitle}>Результат анализа</h2>
-                <div className={styles.resultContent}>{/* ... */}</div>
+                <div className={styles.resultContent}>
+                  <p>Анализ завершен! Спасибо за заполнение анкеты.</p>
+                  {/* Здесь будут результаты анализа */}
+                </div>
               </div>
             </div>
           </div>
@@ -193,6 +214,22 @@ export default function FaceScanner() {
 
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
+
+      {/* Модальное окно с анкетой */}
+      {showQuestionnaire && (
+        <div className={styles.questionnaireModal}>
+          <div className={styles.questionnaireOverlay} onClick={handleQuestionnaireClose} />
+          <div className={styles.questionnaireContent}>
+            <Questionnaire onComplete={handleQuestionnaireComplete} />
+            <button
+              className={styles.closeQuestionnaire}
+              onClick={handleQuestionnaireClose}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

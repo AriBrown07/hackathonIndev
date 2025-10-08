@@ -6,9 +6,6 @@ import {
   Activity,
   AlertCircle,
   Sun,
-  Cigarette,
-  Wine,
-  Moon,
   FileText,
   CheckCircle,
   Loader,
@@ -17,9 +14,6 @@ import {
 import styles from './Questionnaire.module.scss';
 
 import type { HealthQuestionnaire } from '../../types';
-
-import supabase from '../../utils/supabase';
-
 
 const commonSymptoms = [
   'Головная боль',
@@ -54,16 +48,18 @@ const commonChronicDiseases = [
   'Хроническая обструктивная болезнь легких'
 ];
 
-const Questionnaire: React.FC = () => {
+interface QuestionnaireProps {
+  onComplete?: (data: HealthQuestionnaire) => void;
+}
+
+const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 7;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [savedId, setSavedId] = useState<string>('');
 
   const [formData, setFormData] = useState<HealthQuestionnaire>({
-    userEmail: '',
+    userName: '',
     age: 25,
     gender: '',
     hasChronicDiseases: false,
@@ -117,18 +113,17 @@ const Questionnaire: React.FC = () => {
     );
   };
 
- const handleTagKeyDown = (
-  e: React.KeyboardEvent<HTMLInputElement>,
-  field: 'currentMedications' | 'allergies' | 'symptoms',
-  inputField: 'medication' | 'allergy' | 'symptom'
-) => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addTag(field, tagInputs[inputField]);
-    setTagInputs(prev => ({ ...prev, [inputField]: '' }));
-  }
-};
-
+  const handleTagKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: 'currentMedications' | 'allergies' | 'symptoms',
+    inputField: 'medication' | 'allergy' | 'symptom'
+  ) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(field, tagInputs[inputField]);
+      setTagInputs(prev => ({ ...prev, [inputField]: '' }));
+    }
+  };
 
   const toggleArrayItem = (field: 'chronicDiseases' | 'skinConditions', value: string) => {
     const currentArray = formData[field] as string[];
@@ -145,7 +140,7 @@ const Questionnaire: React.FC = () => {
   const validateStep = (): boolean => {
     switch (currentStep) {
       case 1:
-        return formData.userEmail !== '' && formData.age > 0 && formData.gender !== '';
+        return formData.userName !== '' && formData.age > 0 && formData.gender !== '';
       case 2:
         return true;
       case 3:
@@ -185,44 +180,17 @@ const Questionnaire: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const dbData = {
-        user_email: formData.userEmail,
-        age: formData.age,
-        gender: formData.gender,
-        has_chronic_diseases: formData.hasChronicDiseases,
-        chronic_diseases: formData.chronicDiseases,
-        current_medications: formData.currentMedications,
-        allergies: formData.allergies,
-        has_skin_conditions: formData.hasSkinConditions,
-        skin_conditions: formData.skinConditions,
-        skin_sensitivity: formData.skinSensitivity,
-        recent_sun_exposure: formData.recentSunExposure,
-        recent_injuries: formData.recentInjuries,
-        injury_details: formData.injuryDetails,
-        alcohol_consumption: formData.alcoholConsumption,
-        smoking: formData.smoking,
-        stress_level: formData.stressLevel,
-        sleep_quality: formData.sleepQuality,
-        symptoms: formData.symptoms,
-        symptom_duration: formData.symptomDuration,
-        additional_notes: formData.additionalNotes
-      };
 
-      const { data, error: submitError } = await supabase
-        .from('health_questionnaires')
-        .insert([dbData])
-        .select()
-        .maybeSingle();
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (submitError) throw submitError;
 
-      if (data) {
-        setSavedId(data.id);
-        setShowSuccess(true);
+      if (onComplete) {
+        onComplete(formData);
       }
+
     } catch (err) {
       console.error('Error submitting questionnaire:', err);
-      setError('Произошла ошибка при сохранении анкеты. Попробуйте еще раз.');
+      setError('Произошла ошибка при отправке анкеты. Попробуйте еще раз.');
     } finally {
       setIsSubmitting(false);
     }
@@ -242,18 +210,18 @@ const Questionnaire: React.FC = () => {
 
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Email <span className={styles.required}>*</span>
+                Имя <span className={styles.required}>*</span>
               </label>
               <input
                 type="email"
                 className={styles.input}
-                value={formData.userEmail}
-                onChange={e => handleInputChange('userEmail', e.target.value)}
-                placeholder="your@email.com"
+                value={formData.userName}
+                onChange={e => handleInputChange('userName', e.target.value)}
+                placeholder="Ваше имя"
                 required
               />
               <div className={styles.hint}>
-                Результаты анкеты будут отправлены на этот email
+                Результаты анализа будут отправлены на этот email
               </div>
             </div>
 
@@ -900,12 +868,12 @@ const Questionnaire: React.FC = () => {
                   {isSubmitting ? (
                     <span className={styles.loading}>
                       <Loader className={styles.spinner} size={20} />
-                      Сохранение...
+                      Анализируем...
                     </span>
                   ) : (
                     <>
                       <CheckCircle size={20} />
-                      Отправить анкету
+                      Завершить анкету
                     </>
                   )}
                 </button>
@@ -914,29 +882,6 @@ const Questionnaire: React.FC = () => {
           </form>
         </div>
       </div>
-
-      {showSuccess && (
-        <div className={styles.successModal}>
-          <div className={styles.successContent}>
-            <div className={styles.successIcon}>
-              <CheckCircle size={40} />
-            </div>
-            <h2 className={styles.successTitle}>Анкета успешно сохранена!</h2>
-            <p className={styles.successText}>
-              Спасибо за предоставленную информацию. Результаты будут отправлены на {formData.userEmail}
-            </p>
-            <button
-              className={`${styles.button} ${styles.buttonPrimary}`}
-              onClick={() => {
-                setShowSuccess(false);
-                window.location.reload();
-              }}
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

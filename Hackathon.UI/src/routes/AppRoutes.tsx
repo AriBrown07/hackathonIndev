@@ -10,8 +10,6 @@ import Questionnaire from '../pages/Questionnaire/Questionnaire';
 
 const handleAuthSuccess = () => {
   console.log("Авторизация прошла успешно!");
-  // например, редирект на другую страницу:
-  // navigate("/dashboard");
 };
 
 export const AppRoutes: React.FC = () => {
