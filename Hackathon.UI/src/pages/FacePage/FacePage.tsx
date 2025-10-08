@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Camera, Upload } from 'lucide-react';
 import Questionnaire from '../Questionnaire/Questionnaire';
+import HealthAnalyzer from './components/HealthAnalyzer';
+import type { HealthAnalysisResult } from './components/HealthAnalyzer';
 import styles from './FacePage.module.scss';
 
 import type { HealthQuestionnaire } from '../../types';
@@ -13,6 +15,8 @@ export default function FaceScanner() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [resultAnimation, setResultAnimation] = useState(false);
+  const [questionnaireData, setQuestionnaireData] = useState<HealthQuestionnaire | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,7 +93,6 @@ export default function FaceScanner() {
 
   const startScanning = () => {
     setIsScanning(true);
-    // Показываем анкету сразу при начале сканирования
     setTimeout(() => {
       setShowQuestionnaire(true);
     }, 500);
@@ -97,7 +100,7 @@ export default function FaceScanner() {
 
   const handleQuestionnaireComplete = (questionnaireData: HealthQuestionnaire) => {
     console.log('Анкета заполнена, данные:', questionnaireData);
-
+    setQuestionnaireData(questionnaireData);
     setShowQuestionnaire(false);
 
     setTimeout(() => {
@@ -107,11 +110,17 @@ export default function FaceScanner() {
     }, 300);
   };
 
+  const handleAnalysisComplete = (result: HealthAnalysisResult) => {
+    setAnalysisResult(result);
+  };
+
   const reset = () => {
     setPhoto(null);
     setShowResult(false);
     setShowQuestionnaire(false);
     setIsScanning(false);
+    setQuestionnaireData(null);
+    setAnalysisResult(null);
     stopCamera();
   };
 
@@ -189,11 +198,11 @@ export default function FaceScanner() {
           </div>
         )}
 
-        {showResult && (
+        {showResult && photo && questionnaireData && (
           <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>
             <div className={styles.leftPanel}>
               <div className={styles.photoContainer}>
-                <img src={photo!} alt="Scanned face" className={styles.resultPhoto} />
+                <img src={photo} alt="Scanned face" className={styles.resultPhoto} />
               </div>
               <button className={styles.resetButton} onClick={reset}>
                 Сканировать другое фото
@@ -204,8 +213,11 @@ export default function FaceScanner() {
               <div className={styles.resultCard}>
                 <h2 className={styles.resultTitle}>Результат анализа</h2>
                 <div className={styles.resultContent}>
-                  <p>Анализ завершен! Спасибо за заполнение анкеты.</p>
-                  {/* Здесь будут результаты анализа */}
+                  <HealthAnalyzer 
+                    photo={photo} 
+                    questionnaireData={questionnaireData}
+                    onAnalysisComplete={handleAnalysisComplete}
+                  />
                 </div>
               </div>
             </div>

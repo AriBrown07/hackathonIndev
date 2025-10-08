@@ -213,7 +213,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 Имя <span className={styles.required}>*</span>
               </label>
               <input
-                type="email"
+                type="text"
                 className={styles.input}
                 value={formData.userName}
                 onChange={e => handleInputChange('userName', e.target.value)}
@@ -221,7 +221,7 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                 required
               />
               <div className={styles.hint}>
-                Результаты анализа будут отправлены на этот email
+                Результаты анализа будут персонализированы для Вас
               </div>
             </div>
 
