@@ -267,17 +267,6 @@ const Questionnaire: React.FC<QuestionnaireProps> = ({ onComplete }) => {
                   />
                   <label htmlFor="female">Женский</label>
                 </div>
-                <div className={styles.radioOption}>
-                  <input
-                    type="radio"
-                    id="other"
-                    name="gender"
-                    value="other"
-                    checked={formData.gender === 'other'}
-                    onChange={e => handleInputChange('gender', e.target.value)}
-                  />
-                  <label htmlFor="other">Другой</label>
-                </div>
               </div>
             </div>
           </div>
