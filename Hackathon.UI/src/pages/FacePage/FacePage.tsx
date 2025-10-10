@@ -4,6 +4,7 @@ import Questionnaire from '../Questionnaire/Questionnaire';
 import HealthAnalyzer from './components/HealthAnalyzer';
 import type { HealthAnalysisResult } from './components/HealthAnalyzer';
 import styles from './FacePage.module.scss';
+import { Link } from 'react-router-dom';
 
 import type { HealthQuestionnaire } from '../../types';
 
@@ -17,6 +18,7 @@ interface FaceDetectionResult {
 }
 
 export default function FaceScanner() {
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -28,6 +30,7 @@ export default function FaceScanner() {
   const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
   const [faceDetectionStatus, setFaceDetectionStatus] = useState<'checking' | 'success' | 'error' | null>(null);
   const [faceDetectionError, setFaceDetectionError] = useState<string | null>(null);
+  
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -450,27 +453,65 @@ const checkFaceDetection = async (photoData: string) => {
 
         {showResult && photo && questionnaireData && (
           <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>
-            <div className={styles.leftPanel}>
+           <div className={styles.leftPanel}>
               <div className={styles.photoContainer}>
                 <img src={photo} alt="Scanned face" className={styles.resultPhoto} />
               </div>
-              <button className={styles.resetButton} onClick={reset}>
-                Сканировать другое фото
-              </button>
-            </div>
 
-            <div className={styles.rightPanel}>
-              <div className={styles.resultCard}>
-                <h2 className={styles.resultTitle}>Результат анализа</h2>
-                <div className={styles.resultContent}>
-                  <HealthAnalyzer
-                    photo={photo}
-                    questionnaireData={questionnaireData}
-                    onAnalysisComplete={handleAnalysisComplete}
-                  />
-                </div>
+              <div className={styles.actionButtons}>
+                <button className={styles.resetButton} onClick={reset}>
+                  Сканировать другое фото
+                </button>
+
+                <Link to="/coupons">
+                  <button className={styles.ticketButton}>
+                    Взять талон к врачу
+                  </button>
+                </Link>
               </div>
             </div>
+          
+          <div className={styles.rightPanel}>
+  <div className={styles.resultCard}>
+    <h2 className={styles.resultTitle}>Результат анализа</h2>
+
+    <div className={styles.resultContent}>
+      <HealthAnalyzer
+        photo={photo}
+        questionnaireData={questionnaireData}
+        onAnalysisComplete={handleAnalysisComplete}
+      />
+    </div>
+
+    <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
+      Сохранить
+    </button>
+
+    {/* Модальное окно сохранения */}
+    {showSaveModal && (
+      <div className={styles.saveModal}>
+        <div
+          className={styles.saveOverlay}
+          onClick={() => setShowSaveModal(false)}
+        />
+        <div className={styles.saveContent}>
+          <h3>Сохранить результат</h3>
+          <div className={styles.saveActions}>
+            <button >Сохранить в аккаунт</button>
+            <button >Скачать PDF</button>
+          </div>
+          <button
+            className={styles.closeSaveModal}
+            onClick={() => setShowSaveModal(false)}
+          >
+            X
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
           </div>
         )}
 

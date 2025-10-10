@@ -20,7 +20,7 @@
 
 .header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   animation: fadeInDown 0.8s ease;
   padding: 2rem 2rem 0;
   flex-shrink: 0;
@@ -46,7 +46,7 @@
 }
 
 .subtitle {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: rgba(0, 0, 0, 0.95);
   line-height: 1.6;
   max-width: 600px;
@@ -263,6 +263,8 @@
     height: 20px;
     cursor: pointer;
     accent-color: #0ea5e9;
+    position: relative;
+    z-index: 2; 
   }
 
   label {
@@ -270,6 +272,8 @@
     flex: 1;
     font-weight: 500;
     color: #334155;
+    position: relative; 
+    z-index: 1;
   }
 }
 
@@ -452,13 +456,11 @@
   display: flex;
   gap: 1rem;
   margin-top: auto;
-  padding-top: 2rem;
-  border-top: 2px solid #e2e8f0;
+  padding-top: 0.5rem;
   flex-shrink: 0;
-  position: sticky;
   bottom: 0;
   background: rgb(255, 255, 255);
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
 }
 
 .button {
@@ -700,298 +702,5 @@
   .textarea,
   .select {
     padding: 0.75rem;
-  }
-}
-
-
-// Стили для расширенного заключения
-.executiveSummary {
-  display: flex;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
-  border-radius: 20px;
-  margin-bottom: 2rem;
-  border: 2px solid #bae6fd;
-}
-
-.summaryIcon {
-  font-size: 3rem;
-  flex-shrink: 0;
-}
-
-.summaryContent {
-  flex: 1;
-  
-  h4 {
-    margin: 0 0 1rem 0;
-    color: #1e293b;
-    font-size: 1.3rem;
-    font-weight: 700;
-  }
-  
-  p {
-    margin: 0;
-    color: #475569;
-    line-height: 1.6;
-    font-size: 1.05rem;
-  }
-}
-
-.conclusionGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.conclusionSection {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  
-  .sectionIcon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  h4 {
-    margin: 0 0 1rem 0;
-    color: #334155;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-  
-  p {
-    margin: 0;
-    color: #475569;
-    line-height: 1.5;
-    font-size: 0.95rem;
-  }
-}
-
-.aspectsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.positiveAspects, .improvementAreas {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-}
-
-.aspectsHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  
-  h4 {
-    margin: 0;
-    color: #334155;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-  
-  svg {
-    color: #0ea5e9;
-  }
-}
-
-.positiveAspects .aspectsHeader svg {
-  color: #10b981;
-}
-
-.improvementAreas .aspectsHeader svg {
-  color: #f59e0b;
-}
-
-.aspectsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.positiveAspect, .improvementArea {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  
-  .aspectBullet {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-}
-
-.positiveAspect .aspectBullet {
-  background: #10b981;
-  color: white;
-}
-
-.improvementArea .aspectBullet {
-  background: #f59e0b;
-  color: white;
-}
-
-.preventiveSection {
-  background: linear-gradient(135deg, #fef7cd 0%, #fef3c7 100%);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid #fcd34d;
-  
-  .sectionIcon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  h4 {
-    margin: 0 0 1rem 0;
-    color: #92400e;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-  
-  p {
-    margin: 0;
-    color: #92400e;
-    line-height: 1.5;
-    font-size: 0.95rem;
-  }
-}
-
-// Стили для рекомендаций с приоритетами
-.recommendationGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.recommendationItem {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  
-  &.priorityhigh {
-    border-left: 4px solid #ef4444;
-  }
-  
-  &.prioritymedium {
-    border-left: 4px solid #f59e0b;
-  }
-  
-  &.prioritylow {
-    border-left: 4px solid #10b981;
-  }
-}
-
-.recommendationHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  
-  h5 {
-    margin: 0;
-    color: #1e293b;
-    font-size: 1.1rem;
-    font-weight: 600;
-  }
-}
-
-.priorityBadge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  
-  .priorityhigh & {
-    background: #fef2f2;
-    color: #dc2626;
-  }
-  
-  .prioritymedium & {
-    background: #fffbeb;
-    color: #d97706;
-  }
-  
-  .prioritylow & {
-    background: #f0fdf4;
-    color: #059669;
-  }
-}
-
-.actionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.actionItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  
-  .actionBullet {
-    color: #0ea5e9;
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-  
-  span {
-    color: #475569;
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
-}
-
-.timeline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: #64748b;
-  
-  svg {
-    flex-shrink: 0;
-  }
-}
-
-// Адаптивность
-@media (max-width: 768px) {
-  .conclusionGrid,
-  .aspectsGrid {
-    grid-template-columns: 1fr;
-  }
-  
-  .executiveSummary {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.5rem;
-  }
-  
-  .recommendationGrid {
-    grid-template-columns: 1fr;
   }
 }
