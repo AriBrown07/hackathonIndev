@@ -4,20 +4,13 @@ import {
   AlertCircle, 
   TrendingUp, 
   Brain,
-  Eye,
-  Navigation,
   Loader,
   Heart,
   Shield,
   Zap,
   Clock,
-  Droplets,
-  Sun,
-  Moon,
   Smile,
-  Frown,
-  Thermometer,
-  Activity as Fitness
+  Frown
 } from 'lucide-react';
 import styles from './HealthAnalyzer.module.scss';
 import type { HealthQuestionnaire } from '../../../types';
@@ -166,7 +159,7 @@ export interface Recommendation {
 const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({ 
   photo, 
   questionnaireData, 
-  onAnalysisComplete 
+  onAnalysisComplete
 }) => {
   const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -195,7 +188,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       setTimeout(() => {
         setCurrentStep(step);
         setProgress(((index + 1) / steps.length) * 100);
-      }, index * 1000);
+      }, index * 800);
     });
   };
 
@@ -213,6 +206,8 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       image.src = photo;
       await image.decode();
 
+      // Поскольку проверка лица уже выполнена в FacePage.tsx,
+      // мы можем сразу анализировать изображение
       const faceResult = await analyzeImage(image);
       const result = generateHealthResults(faceResult, questionnaireData);
       
@@ -725,9 +720,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     );
   };
 
-  // Остальной код компонента (рендеринг) остается таким же, как в предыдущем примере
-  // Добавлю только обновленную секцию детального заключения
-
   if (modelsLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -1102,6 +1094,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
 
       <div className={styles.mediapipeInfo}>
         <p>🎭 Анализ выполнен с использованием технологии MediaPipe для анализа лица и комплексной оценки 24 показателей здоровья</p>
+        <p>Информация в программе носит справочный характер и не заменяет консультацию специалиста. Для точной оценки здоровья рекомендуем обратиться к врачу.</p>
       </div>
     </div>
   );
