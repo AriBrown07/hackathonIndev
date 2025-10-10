@@ -263,6 +263,8 @@
     height: 20px;
     cursor: pointer;
     accent-color: #0ea5e9;
+    position: relative;
+    z-index: 2; 
   }
 
   label {
@@ -270,6 +272,8 @@
     flex: 1;
     font-weight: 500;
     color: #334155;
+    position: relative; 
+    z-index: 1;
   }
 }
 
