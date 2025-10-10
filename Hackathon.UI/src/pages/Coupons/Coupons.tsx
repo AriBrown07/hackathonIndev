@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import styles from './Coupons.module.scss';
 import { mockClinics, mockDoctors, mockAppointments } from '../../data/mockData';
 import type { Doctor, Appointment, BookingFormData } from '../../types';
@@ -9,6 +9,79 @@ interface SelectedAppointment {
   doctor: Doctor;
 }
 
+interface ExpandedDoctor {
+  [doctorId: string]: boolean;
+}
+
+// Функция для получения только ближайшего месяца
+const getNearestMonthAppointments = (appointments: Appointment[]) => {
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  
+  return appointments.filter(apt => {
+    const aptDate = new Date(apt.date);
+    return aptDate >= now && aptDate < nextMonth;
+  });
+};
+
+const groupAppointmentsByMonth = (appointments: Appointment[]) => {
+  const grouped: { [key: string]: { [key: string]: Appointment[] } } = {};
+
+  appointments.forEach(apt => {
+    const date = new Date(apt.date);
+    const monthKey = date.toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
+    const dateKey = apt.date;
+
+    if (!grouped[monthKey]) {
+      grouped[monthKey] = {};
+    }
+    if (!grouped[monthKey][dateKey]) {
+      grouped[monthKey][dateKey] = [];
+    }
+    grouped[monthKey][dateKey].push(apt);
+  });
+
+  return grouped;
+};
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const weekday = date.toLocaleString('ru-RU', { weekday: 'short' });
+  return { day, weekday };
+};
+
+const preprocessData = () => {
+  const clinicMap = new Map(mockClinics.map(c => [c.id, c]));
+  const doctorMap = new Map(mockDoctors.map(d => [d.id, d]));
+  
+  const appointmentsByDoctor = new Map<string, Appointment[]>();
+  
+  // Фильтруем только ближайшие appointments
+  mockAppointments.forEach(apt => {
+    const aptDate = new Date(apt.date);
+    const now = new Date();
+    // Показываем только будущие даты
+    if (aptDate >= now) {
+      if (!appointmentsByDoctor.has(apt.doctorId)) {
+        appointmentsByDoctor.set(apt.doctorId, []);
+      }
+      appointmentsByDoctor.get(apt.doctorId)!.push(apt);
+    }
+  });
+
+  const groupedAppointmentsByDoctor = new Map<string, ReturnType<typeof groupAppointmentsByMonth>>();
+  appointmentsByDoctor.forEach((appointments, doctorId) => {
+    // Берем только ближайший месяц для каждого врача
+    const nearestMonthAppointments = getNearestMonthAppointments(appointments);
+    if (nearestMonthAppointments.length > 0) {
+      groupedAppointmentsByDoctor.set(doctorId, groupAppointmentsByMonth(nearestMonthAppointments));
+    }
+  });
+
+  return { clinicMap, doctorMap, groupedAppointmentsByDoctor };
+};
+
 const Coupons: React.FC = () => {
   const [selectedClinic, setSelectedClinic] = useState<string>('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
@@ -17,72 +90,61 @@ const Coupons: React.FC = () => {
   const [bookingForm, setBookingForm] = useState<BookingFormData>({ name: '', email: '' });
   const [isBooked, setIsBooked] = useState(false);
   const [appointments, setAppointments] = useState(mockAppointments);
+  const [expandedDoctors, setExpandedDoctors] = useState<ExpandedDoctor>({});
+  const [visibleDoctorsCount, setVisibleDoctorsCount] = useState<number>(5);
+
+  const { clinicMap, doctorMap, groupedAppointmentsByDoctor } = useMemo(() => preprocessData(), []);
 
   const specialties = useMemo(() => {
     return Array.from(new Set(mockDoctors.map(d => d.specialty)));
   }, []);
 
-  const cities = useMemo(() => {
-    return Array.from(new Set(mockClinics.map(c => c.city)));
-  }, []);
-
   const filteredDoctors = useMemo(() => {
-    return mockDoctors.filter(doctor => {
+    const filtered = mockDoctors.filter(doctor => {
+      // Проверяем, есть ли у врача доступные слоты в ближайшем месяце
+      const hasAvailableSlots = groupedAppointmentsByDoctor.has(doctor.id);
+      
       const matchesClinic = !selectedClinic || doctor.clinicId === selectedClinic;
       const matchesSpecialty = !selectedSpecialty || doctor.specialty === selectedSpecialty;
       const matchesSearch = !searchTerm ||
         doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesClinic && matchesSpecialty && matchesSearch;
-    });
-  }, [selectedClinic, selectedSpecialty, searchTerm]);
-
-  const getClinicForDoctor = (doctorId: string) => {
-    const doctor = mockDoctors.find(d => d.id === doctorId);
-    return doctor ? mockClinics.find(c => c.id === doctor.clinicId) : null;
-  };
-
-  const getAppointmentsForDoctor = (doctorId: string) => {
-    return appointments.filter(apt => apt.doctorId === doctorId);
-  };
-
-  const groupAppointmentsByMonth = (appointments: Appointment[]) => {
-    const grouped: { [key: string]: { [key: string]: Appointment[] } } = {};
-
-    appointments.forEach(apt => {
-      const date = new Date(apt.date);
-      const monthKey = date.toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
-      const dateKey = apt.date;
-
-      if (!grouped[monthKey]) {
-        grouped[monthKey] = {};
-      }
-      if (!grouped[monthKey][dateKey]) {
-        grouped[monthKey][dateKey] = [];
-      }
-      grouped[monthKey][dateKey].push(apt);
+      return matchesClinic && matchesSpecialty && matchesSearch && hasAvailableSlots;
     });
 
-    return grouped;
-  };
+    return filtered;
+  }, [selectedClinic, selectedSpecialty, searchTerm, groupedAppointmentsByDoctor]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const weekday = date.toLocaleString('ru-RU', { weekday: 'short' });
-    return { day, weekday };
-  };
+  // Показываем только ограниченное количество врачей
+  const visibleDoctors = useMemo(() => {
+    return filteredDoctors.slice(0, visibleDoctorsCount);
+  }, [filteredDoctors, visibleDoctorsCount]);
 
-  const handleSlotClick = (appointment: Appointment, doctor: Doctor) => {
+  const handleShowMore = useCallback(() => {
+    setVisibleDoctorsCount(prev => prev + 5);
+  }, []);
+
+  const handleShowLess = useCallback(() => {
+    setVisibleDoctorsCount(5);
+  }, []);
+
+  const toggleDoctorExpanded = useCallback((doctorId: string) => {
+    setExpandedDoctors(prev => ({
+      ...prev,
+      [doctorId]: !prev[doctorId]
+    }));
+  }, []);
+
+  const handleSlotClick = useCallback((appointment: Appointment, doctor: Doctor) => {
     if (!appointment.isBooked) {
       setSelectedAppointment({ appointment, doctor });
       setIsBooked(false);
       setBookingForm({ name: '', email: '' });
     }
-  };
+  }, []);
 
-  const handleBooking = (e: React.FormEvent) => {
+  const handleBooking = useCallback((e: React.FormEvent) => {
     e.preventDefault();
 
     if (selectedAppointment && bookingForm.name && bookingForm.email) {
@@ -101,13 +163,104 @@ const Coupons: React.FC = () => {
         setBookingForm({ name: '', email: '' });
       }, 3000);
     }
-  };
+  }, [selectedAppointment, bookingForm]);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedAppointment(null);
     setIsBooked(false);
     setBookingForm({ name: '', email: '' });
-  };
+  }, []);
+
+  const Slot = React.memo(({ slot, doctor }: { slot: Appointment; doctor: Doctor }) => (
+    <div
+      className={`${styles.slot} ${
+        slot.isBooked ? styles.slotBooked : styles.slotAvailable
+      }`}
+      onClick={() => handleSlotClick(slot, doctor)}
+    >
+      {slot.time}
+    </div>
+  ));
+
+  const DayCard = React.memo(({ date, slots, doctor }: { date: string; slots: Appointment[]; doctor: Doctor }) => {
+    const { day, weekday } = useMemo(() => formatDate(date), [date]);
+    
+    return (
+      <div className={styles.dayCard}>
+        <div className={styles.dayHeader}>
+          <div>{day}</div>
+          <div className={styles.weekday}>{weekday}</div>
+        </div>
+        <div className={styles.slots}>
+          {slots.length > 0 ? (
+            slots.map(slot => (
+              <Slot key={slot.id} slot={slot} doctor={doctor} />
+            ))
+          ) : (
+            <div className={styles.noSlots}>Нет слотов</div>
+          )}
+        </div>
+      </div>
+    );
+  });
+
+  const MonthSection = React.memo(({ month, dates, doctor }: { month: string; dates: { [key: string]: Appointment[] }; doctor: Doctor }) => (
+    <div className={styles.monthSection}>
+      <div className={styles.monthTitle}>
+        <Calendar size={20} />
+        {month}
+      </div>
+      <div className={styles.daysGrid}>
+        {Object.entries(dates).map(([date, slots]) => (
+          <DayCard key={date} date={date} slots={slots} doctor={doctor} />
+        ))}
+      </div>
+    </div>
+  ));
+
+  const DoctorCard = React.memo(({ doctor, isExpanded }: { doctor: Doctor; isExpanded: boolean }) => {
+    const clinic = clinicMap.get(doctor.clinicId);
+    const groupedAppointments = groupedAppointmentsByDoctor.get(doctor.id);
+
+    if (!groupedAppointments) return null;
+
+    return (
+      <div className={styles.doctorCard}>
+        <div 
+          className={styles.doctorHeader}
+          onClick={() => toggleDoctorExpanded(doctor.id)}
+          style={{ cursor: 'pointer' }}
+        >
+          <img
+            src={doctor.photoUrl}
+            alt={doctor.name}
+            className={styles.doctorPhoto}
+          />
+          <div className={styles.doctorInfo}>
+            <h2 className={styles.doctorName}>{doctor.name}</h2>
+            <div className={styles.doctorSpecialty}>{doctor.specialty}</div>
+            {clinic && (
+              <div className={styles.clinicInfo}>
+                <MapPin size={16} />
+                <span>{clinic.name}, {clinic.address}</span>
+              </div>
+            )}
+          </div>
+          <div className={styles.expandIcon}>
+            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className={styles.calendar}>
+            {Object.entries(groupedAppointments).map(([month, dates]) => (
+              <MonthSection key={month} month={month} dates={dates} doctor={doctor} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  });
 
   return (
     <div className={styles.container}>
@@ -163,82 +316,52 @@ const Coupons: React.FC = () => {
         </div>
       </div>
 
+      <div className={styles.resultsInfo}>
+        Найдено врачей: {filteredDoctors.length}
+        {filteredDoctors.length > visibleDoctorsCount && (
+          <span> (показано: {visibleDoctors.length})</span>
+        )}
+      </div>
+
       <div className={styles.doctorsList}>
-        {filteredDoctors.length === 0 ? (
+        {visibleDoctors.length === 0 ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyStateIcon}>🔍</div>
             <div className={styles.emptyStateTitle}>Врачи не найдены</div>
-            <div className={styles.emptyStateText}>Попробуйте изменить параметры фильтрации</div>
+            <div className={styles.emptyStateText}>
+              {filteredDoctors.length === 0 
+                ? "Попробуйте изменить параметры фильтрации"
+                : "Нет доступных записей в ближайшем месяце"
+              }
+            </div>
           </div>
         ) : (
-          filteredDoctors.map(doctor => {
-            const clinic = getClinicForDoctor(doctor.id);
-            const doctorAppointments = getAppointmentsForDoctor(doctor.id);
-            const groupedAppointments = groupAppointmentsByMonth(doctorAppointments);
-
-            return (
-              <div key={doctor.id} className={styles.doctorCard}>
-                <div className={styles.doctorHeader}>
-                  <img
-                    src={doctor.photoUrl}
-                    alt={doctor.name}
-                    className={styles.doctorPhoto}
-                  />
-                  <div className={styles.doctorInfo}>
-                    <h2 className={styles.doctorName}>{doctor.name}</h2>
-                    <div className={styles.doctorSpecialty}>{doctor.specialty}</div>
-                    {clinic && (
-                      <div className={styles.clinicInfo}>
-                        <MapPin size={16} />
-                        <span>{clinic.name}, {clinic.address}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.calendar}>
-                  {Object.entries(groupedAppointments).map(([month, dates]) => (
-                    <div key={month} className={styles.monthSection}>
-                      <div className={styles.monthTitle}>
-                        <Calendar size={24} />
-                        {month}
-                      </div>
-                      <div className={styles.daysGrid}>
-                        {Object.entries(dates).map(([date, slots]) => {
-                          const { day, weekday } = formatDate(date);
-                          return (
-                            <div key={date} className={styles.dayCard}>
-                              <div className={styles.dayHeader}>
-                                <div>{day}</div>
-                                <div className={styles.weekday}>{weekday}</div>
-                              </div>
-                              <div className={styles.slots}>
-                                {slots.length > 0 ? (
-                                  slots.map(slot => (
-                                    <div
-                                      key={slot.id}
-                                      className={`${styles.slot} ${
-                                        slot.isBooked ? styles.slotBooked : styles.slotAvailable
-                                      }`}
-                                      onClick={() => handleSlotClick(slot, doctor)}
-                                    >
-                                      {slot.time}
-                                    </div>
-                                  ))
-                                ) : (
-                                  <div className={styles.noSlots}>Нет слотов</div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <>
+            {visibleDoctors.map(doctor => (
+              <DoctorCard 
+                key={doctor.id} 
+                doctor={doctor} 
+                isExpanded={expandedDoctors[doctor.id] || false}
+              />
+            ))}
+            
+            {/* Кнопки показать еще/скрыть */}
+            {filteredDoctors.length > visibleDoctorsCount && (
+              <div className={styles.showMoreContainer}>
+                <button className={styles.showMoreButton} onClick={handleShowMore}>
+                  Показать еще {Math.min(5, filteredDoctors.length - visibleDoctorsCount)} врачей
+                </button>
               </div>
-            );
-          })
+            )}
+            
+            {visibleDoctorsCount > 5 && (
+              <div className={styles.showMoreContainer}>
+                <button className={styles.showLessButton} onClick={handleShowLess}>
+                  Скрыть список
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
