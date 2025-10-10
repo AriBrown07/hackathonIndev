@@ -30,7 +30,6 @@ const HomePage = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.backgroundPattern}></div>
 
       <div className={`${styles.content} ${isVisible ? styles.visible : ''}`}>
         <div className={styles.hero}>
@@ -39,8 +38,8 @@ const HomePage = () => {
           </div>
 
           <h1 className={styles.title}>
-            Медицинская диагностика
-            <span className={styles.titleAccent}> онлайн</span>
+            Медицинская диагностика онлайн
+            <span className={styles.titleAccent}></span>
           </h1>
 
           <p className={styles.subtitle}>
@@ -87,35 +86,6 @@ const HomePage = () => {
               за решения, принятые на основе результатов диагностики.
               <strong> Для получения точного диагноза обратитесь к квалифицированному врачу.</strong>
             </p>
-          </div>
-        </div>
-
-        <div className={styles.process}>
-          <h2 className={styles.processTitle}>Как это работает</h2>
-          <div className={styles.steps}>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>1</div>
-              <h4 className={styles.stepTitle}>Регистрация</h4>
-              <p className={styles.stepText}>Создайте аккаунт или войдите</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>2</div>
-              <h4 className={styles.stepTitle}>Диагностика</h4>
-              <p className={styles.stepText}>Загрузите фото и пройдите тест</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>3</div>
-              <h4 className={styles.stepTitle}>Результаты</h4>
-              <p className={styles.stepText}>Получите анализ состояния</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>4</div>
-              <h4 className={styles.stepTitle}>Запись</h4>
-              <p className={styles.stepText}>Запишитесь к врачу онлайн</p>
-            </div>
           </div>
         </div>
       </div>
