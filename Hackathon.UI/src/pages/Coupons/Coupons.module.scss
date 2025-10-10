@@ -563,3 +563,44 @@
     flex-direction: column;
   }
 }
+
+.resultsInfo {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.showMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.showMoreButton, .showLessButton {
+  padding: 10px 20px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 6px;
+  cursor: pointer;
+  
+  &:hover {
+    background: #007bff;
+    color: white;
+  }
+}
+
+.showLessButton {
+  border-color: #6c757d;
+  color: #6c757d;
+  
+  &:hover {
+    background: #6c757d;
+    color: white;
+  }
+}
+
+.expandIcon {
+  margin-left: auto;
+  color: #666;
+}
