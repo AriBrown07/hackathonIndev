@@ -89,35 +89,6 @@ const HomePage = () => {
             </p>
           </div>
         </div>
-
-        <div className={styles.process}>
-          <h2 className={styles.processTitle}>Как это работает</h2>
-          <div className={styles.steps}>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>1</div>
-              <h4 className={styles.stepTitle}>Регистрация</h4>
-              <p className={styles.stepText}>Создайте аккаунт или войдите</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>2</div>
-              <h4 className={styles.stepTitle}>Диагностика</h4>
-              <p className={styles.stepText}>Загрузите фото и пройдите тест</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>3</div>
-              <h4 className={styles.stepTitle}>Результаты</h4>
-              <p className={styles.stepText}>Получите анализ состояния</p>
-            </div>
-            <div className={styles.stepArrow}>→</div>
-            <div className={styles.step}>
-              <div className={styles.stepNumber}>4</div>
-              <h4 className={styles.stepTitle}>Запись</h4>
-              <p className={styles.stepText}>Запишитесь к врачу онлайн</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
