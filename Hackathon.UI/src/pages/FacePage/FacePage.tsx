@@ -36,7 +36,15 @@ export default function FaceScanner() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  
+  useEffect(() => {
+    document.documentElement.classList.add('no-scroll');
+    document.body.classList.add('no-scroll');
+    
+    return () => {
+      document.documentElement.classList.remove('no-scroll');
+      document.body.classList.remove('no-scroll');
+    };
+  }, []);  
 
   const startCamera = async () => {
     try {
