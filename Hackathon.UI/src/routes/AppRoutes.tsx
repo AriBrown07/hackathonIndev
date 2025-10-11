@@ -11,6 +11,7 @@ import ProtectedRoute from '../pages/Authorization/components/ProtectedRoute';
 import NotFoundPage from '../pages/NotFoundPage/NotFoundPage';
 import Ticket from '../pages/Ticket/Ticket';
 import MedicalExamination from '../pages/medicalExamination/MedicalExamination';
+import Driver from '../pages/Driver/Driver';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -57,6 +58,15 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <MedicalExamination />
+          </ProtectedRoute>
+        } 
+      />
+
+         <Route 
+        path="/driver" 
+        element={
+          <ProtectedRoute>
+            <Driver />
           </ProtectedRoute>
         } 
       />

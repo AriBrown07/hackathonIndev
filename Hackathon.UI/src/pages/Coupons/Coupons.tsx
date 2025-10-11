@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTickets } from '../../hooks/useTickets';
 import styles from './Coupons.module.scss';
@@ -161,7 +161,8 @@ export default function Coupons() {
   });
   const [isBooked, setIsBooked] = useState(false);
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-    const navigate = useNavigate();
+  const [isExamsDropdownOpen, setIsExamsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   // Получение уникальных специальностей
   const specialties = useMemo(() => {
@@ -351,9 +352,21 @@ export default function Coupons() {
     setCurrentWeekOffset(0);
   }, []);
 
+  // Обработчик выбора осмотра
+  const handleExamSelect = (examType: string) => {
+    setIsExamsDropdownOpen(false);
+    if (examType === 'medicalExamination') {
+      navigate('/medicalExamination');
+    } else if (examType === 'driver') {
+      // Здесь будет переход на страницу водительской комиссии
+      navigate('/driver');
+      console.log('Переход на страницу водительской комиссии');
+    }
+  };
+
   return (
     <div className={styles.container}>
-          <button 
+      <button 
         className={styles.accountButton}
         onClick={() => navigate('/profile')}
         title="Перейти в профиль"
@@ -369,45 +382,75 @@ export default function Coupons() {
 
       {/* Фильтры */}
       <div className={styles.filters}>
-  <div className={styles.filterGroup}>
-    <label className={styles.filterLabel}>Специальность:</label>
-    <select
-      className={styles.filterSelect}
-      value={selectedSpecialty}
-      onChange={(e) => setSelectedSpecialty(e.target.value)}
-    >
-      {specialties.map(specialty => (
-        <option key={specialty} value={specialty}>
-          {specialty === 'all' ? 'Все специальности' : specialty}
-        </option>
-      ))}
-    </select>
-  </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Специальность:</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedSpecialty}
+            onChange={(e) => setSelectedSpecialty(e.target.value)}
+          >
+            {specialties.map(specialty => (
+              <option key={specialty} value={specialty}>
+                {specialty === 'all' ? 'Все специальности' : specialty}
+              </option>
+            ))}
+          </select>
+        </div>
 
-  <div className={styles.filterGroup}>
-    <label className={styles.filterLabel}>Дата приема:</label>
-    <select
-      className={styles.filterSelect}
-      value={selectedDate}
-      onChange={(e) => setSelectedDate(e.target.value)}
-    >
-      <option value="">Любая дата</option>
-      {availableDates.map(date => (
-        <option key={date} value={date}>
-          {formatDate(date)}
-        </option>
-      ))}
-    </select>
-  </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Дата приема:</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            <option value="">Любая дата</option>
+            {availableDates.map(date => (
+              <option key={date} value={date}>
+                {formatDate(date)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-  <Link to="/medicalExamination" className={styles.examButton}>
-    Пройти профосмотр
-  </Link>
+        {/* Выпадающий список дополнительных осмотров */}
+        <div className={styles.examDropdown}>
+          <button 
+            className={styles.examDropdownButton}
+            onClick={() => setIsExamsDropdownOpen(!isExamsDropdownOpen)}
+          >
+            Дополнительные осмотры
+            <ChevronDown size={16} className={isExamsDropdownOpen ? styles.rotate : ''} />
+          </button>
+          
+          {isExamsDropdownOpen && (
+            <div className={styles.examDropdownMenu}>
+              <button 
+                className={styles.examDropdownItem}
+                onClick={() => handleExamSelect('medicalExamination')}
+              >
+                <div className={styles.examItem}>
+                  <span className={styles.examName}>Профосмотры</span>
+                  <span className={styles.examFrequency}>(раз в год)</span>
+                </div>
+              </button>
+              <button 
+                className={styles.examDropdownItem}
+                onClick={() => handleExamSelect('driver')}
+              >
+                <div className={styles.examItem}>
+                  <span className={styles.examName}>Водительская комиссия</span>
+                  <span className={styles.examFrequency}>(раз в 5 лет)</span>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
 
-  <button className={styles.resetButton} onClick={handleResetFilters}>
-    Сбросить фильтры
-  </button>
-</div>
+        <button className={styles.resetButton} onClick={handleResetFilters}>
+          Сбросить фильтры
+        </button>
+      </div>
 
       {/* Навигация по неделям */}
       <div className={styles.weekNavigation}>
