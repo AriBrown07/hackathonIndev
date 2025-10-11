@@ -9,6 +9,7 @@ export function useAuth() {
 
   useEffect(() => {
     // Получаем текущую сессию при загрузке
+    
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);

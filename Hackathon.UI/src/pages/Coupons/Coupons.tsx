@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import styles from './Coupons.module.scss';
 import { mockClinics, mockDoctors, mockAppointments } from '../../data/mockData';
 import type { Doctor, Appointment, BookingFormData } from '../../types';
@@ -16,9 +18,312 @@ const Coupons: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<SelectedAppointment | null>(null);
   const [bookingForm, setBookingForm] = useState<BookingFormData>({ name: '', email: '' });
   const [isBooked, setIsBooked] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [appointments, setAppointments] = useState(mockAppointments);
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+
+  // Функция для генерации HTML контента талона
+  const generateTicketHTML = useCallback((appointmentData: {
+    patientName: string;
+    patientEmail: string;
+    doctorName: string;
+    doctorSpecialty: string;
+    clinicName: string;
+    clinicAddress: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    appointmentId: string;
+  }) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Медицинский талон - ${appointmentData.patientName}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+          
+          body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+          }
+          .ticket-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          }
+          .header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+          }
+          .header h1 { 
+            margin: 0 0 10px 0;
+            font-size: 32px;
+            font-weight: 700;
+          }
+          .clinic-info {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+          }
+          .barcode {
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            letter-spacing: 3px;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+          }
+          .content {
+            padding: 30px;
+          }
+          .info-section { 
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #f8f9ff;
+          }
+          .info-section h3 { 
+            color: #667eea; 
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            font-size: 20px;
+            font-weight: 600;
+          }
+          .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 0;
+          }
+          .info-label {
+            font-weight: 600;
+            color: #555;
+            flex: 1;
+          }
+          .info-value {
+            color: #333;
+            flex: 2;
+            text-align: right;
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #e8f5e8;
+            color: #2e7d32;
+          }
+          .footer { 
+            background: #f5f5f5;
+            padding: 25px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+          }
+          .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #666;
+          }
+          .footer strong {
+            color: #333;
+          }
+          .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.1;
+            font-size: 48px;
+            color: #667eea;
+            transform: rotate(-15deg);
+            pointer-events: none;
+          }
+          @media print {
+            body { 
+              margin: 0;
+              padding: 0;
+            }
+            .ticket-container {
+              box-shadow: none;
+              border: 1px solid #ccc;
+            }
+            .watermark {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="ticket-container">
+          <div class="header">
+            <h1>МЕДИЦИНСКИЙ ТАЛОН</h1>
+            <p class="clinic-info">FaceDiagnosis System - Медицинская диагностика онлайн</p>
+          </div>
+          
+          <div class="barcode">
+            ТАЛОН № ${appointmentData.appointmentId}
+          </div>
+          
+          <div class="content">
+            <div class="info-section">
+              <h3>Информация о пациенте</h3>
+              <div class="info-row">
+                <span class="info-label">Фамилия Имя:</span>
+                <span class="info-value">${appointmentData.patientName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">${appointmentData.patientEmail}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Статус талона:</span>
+                <span class="info-value">
+                  <span class="status-badge">АКТИВЕН</span>
+                </span>
+              </div>
+            </div>
+            
+            <div class="info-section">
+              <h3>Информация о приеме</h3>
+              <div class="info-row">
+                <span class="info-label">Дата приема:</span>
+                <span class="info-value">${appointmentData.appointmentDate}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Время приема:</span>
+                <span class="info-value">${appointmentData.appointmentTime}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Лечащий врач:</span>
+                <span class="info-value">${appointmentData.doctorName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Специальность:</span>
+                <span class="info-value">${appointmentData.doctorSpecialty}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Поликлиника:</span>
+                <span class="info-value">${appointmentData.clinicName}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Адрес:</span>
+                <span class="info-value">${appointmentData.clinicAddress}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p><strong>Талон сгенерирован:</strong> ${new Date().toLocaleDateString('ru-RU')} ${new Date().toLocaleTimeString('ru-RU')}</p>
+            <p><strong>Важная информация:</strong> Приходите за 10-15 минут до приема. Имейте при себе паспорт и полис ОМС.</p>
+            <p>При отмене записи сообщите заранее по телефону регистратуры.</p>
+          </div>
+        </div>
+
+        <div class="watermark">FaceDiagnosis</div>
+      </body>
+      </html>
+    `;
+  }, []);
+
+  // Функция для создания и отправки PDF талона
+  const generateAndSendTicketPDF = useCallback(async (appointmentData: {
+    patientName: string;
+    patientEmail: string;
+    doctorName: string;
+    doctorSpecialty: string;
+    clinicName: string;
+    clinicAddress: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    appointmentId: string;
+  }) => {
+    setIsGeneratingPDF(true);
+    
+    try {
+      // Создаем временный iframe для рендеринга HTML
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '-10000px';
+      iframe.style.bottom = '0';
+      iframe.style.width = '800px';
+      iframe.style.height = '1000px';
+      iframe.style.border = 'none';
+      
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) {
+        throw new Error('Cannot access iframe document');
+      }
+      
+      // Записываем HTML в iframe
+      iframeDoc.open();
+      iframeDoc.write(generateTicketHTML(appointmentData));
+      iframeDoc.close();
+      
+      // Ждем загрузки контента
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Создаем canvas из iframe
+      const canvas = await html2canvas(iframeDoc.body, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: iframeDoc.body.scrollHeight,
+        windowWidth: 800,
+        windowHeight: iframeDoc.body.scrollHeight
+      });
+      
+      // Удаляем iframe
+      document.body.removeChild(iframe);
+      
+      // Создаем PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Рассчитываем размеры для A4
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, (pdfHeight - 20) / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+      
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      // Сохраняем PDF локально (в реальном приложении здесь была бы отправка на email)
+      const fileName = `Медицинский_талон_${appointmentData.patientName.replace(/\s+/g, '_')}_${appointmentData.appointmentDate.replace(/\./g, '_')}.pdf`;
+      pdf.save(fileName);
+      
+      // Имитация отправки на email
+      console.log(`Талон отправлен на email: ${appointmentData.patientEmail}`);
+      
+      return true;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      return false;
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  }, [generateTicketHTML]);
 
   const specialties = useMemo(() => {
     return Array.from(new Set(mockDoctors.map(d => d.specialty)));
@@ -101,7 +406,7 @@ const Coupons: React.FC = () => {
 
   const handleDoctorSelect = useCallback((doctor: Doctor) => {
     setSelectedDoctor(doctor);
-    setCurrentMonthOffset(0); // Сброс к текущему месяцу при выборе врача
+    setCurrentMonthOffset(0);
   }, []);
 
   const handleBackToList = useCallback(() => {
@@ -117,10 +422,19 @@ const Coupons: React.FC = () => {
     }
   }, []);
 
-  const handleBooking = useCallback((e: React.FormEvent) => {
+  // Обновленная функция обработки записи
+  const handleBooking = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (selectedAppointment && bookingForm.name && bookingForm.email) {
+      const clinic = getClinicForDoctor(selectedAppointment.doctor.id);
+      
+      if (!clinic) {
+        alert('Ошибка: не найдена информация о поликлинике');
+        return;
+      }
+
+      // Обновляем состояние записи
       setAppointments(prev =>
         prev.map(apt =>
           apt.id === selectedAppointment.appointment.id
@@ -129,14 +443,37 @@ const Coupons: React.FC = () => {
         )
       );
 
-      setIsBooked(true);
+      // Генерируем и отправляем PDF талон
+      const appointmentData = {
+        patientName: bookingForm.name,
+        patientEmail: bookingForm.email,
+        doctorName: selectedAppointment.doctor.name,
+        doctorSpecialty: selectedAppointment.doctor.specialty,
+        clinicName: clinic.name,
+        clinicAddress: clinic.address,
+        appointmentDate: new Date(selectedAppointment.appointment.date).toLocaleDateString('ru-RU', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }),
+        appointmentTime: selectedAppointment.appointment.time,
+        appointmentId: selectedAppointment.appointment.id
+      };
 
-      setTimeout(() => {
-        setSelectedAppointment(null);
-        setBookingForm({ name: '', email: '' });
-      }, 3000);
+      const pdfGenerated = await generateAndSendTicketPDF(appointmentData);
+
+      if (pdfGenerated) {
+        setIsBooked(true);
+        
+        setTimeout(() => {
+          setSelectedAppointment(null);
+          setBookingForm({ name: '', email: '' });
+        }, 3000);
+      } else {
+        alert('Ошибка при создании талона. Пожалуйста, попробуйте еще раз.');
+      }
     }
-  }, [selectedAppointment, bookingForm]);
+  }, [selectedAppointment, bookingForm, getClinicForDoctor, generateAndSendTicketPDF]);
 
   const handleCloseModal = useCallback(() => {
     setSelectedAppointment(null);
@@ -159,7 +496,7 @@ const Coupons: React.FC = () => {
 
   const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage);
 
-  // Рендер списка врачей
+  // Рендер списка врачей (остается без изменений)
   const renderDoctorsList = () => (
     <>
       <div className={styles.doctorsGrid}>
@@ -232,7 +569,7 @@ const Coupons: React.FC = () => {
     </>
   );
 
-  // Рендер расписания выбранного врача
+  // Рендер расписания выбранного врача (остается без изменений)
   const renderDoctorSchedule = () => {
     if (!selectedDoctor) return null;
 
@@ -455,7 +792,7 @@ const Coupons: React.FC = () => {
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Email для подтверждения</label>
+                    <label className={styles.formLabel}>Email для получения талона</label>
                     <input
                       type="email"
                       className={styles.formInput}
@@ -477,8 +814,9 @@ const Coupons: React.FC = () => {
                     <button
                       type="submit"
                       className={`${styles.button} ${styles.buttonPrimary}`}
+                      disabled={isGeneratingPDF}
                     >
-                      Записаться
+                      {isGeneratingPDF ? 'Генерация талона...' : 'Записаться'}
                     </button>
                   </div>
                 </form>
@@ -490,7 +828,10 @@ const Coupons: React.FC = () => {
                   Запись успешно оформлена!
                 </div>
                 <p className={styles.successText}>
-                  Подтверждение отправлено на {bookingForm.email}
+                  Талон отправлен на {bookingForm.email} и загружен на ваше устройство
+                </p>
+                <p className={styles.successNote}>
+                  Пожалуйста, сохраните PDF файл и приходите с ним на прием
                 </p>
               </div>
             )}
