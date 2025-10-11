@@ -9,8 +9,8 @@ import {
   Shield,
   Zap,
   Clock,
-  Smile,
-  Frown
+  ArrowRight,
+  Stethoscope
 } from 'lucide-react';
 import styles from './HealthAnalyzer.module.scss';
 import type { HealthQuestionnaire } from '../../../types';
@@ -31,7 +31,17 @@ export interface HealthAnalysisResult {
   healthRisks: HealthRisks;
   detailedConclusion: DetailedConclusion;
   recommendations: Recommendation[];
+  doctorRecommendations: DoctorRecommendation[];
   warnings: string[];
+}
+
+export interface DoctorRecommendation {
+  specialty: string;
+  priority: 'high' | 'medium' | 'low';
+  reason: string;
+  examination: string[];
+  frequency: string;
+  urgency: string;
 }
 
 export interface FacialAnalysis {
@@ -154,6 +164,7 @@ export interface Recommendation {
   priority: 'high' | 'medium' | 'low';
   actions: string[];
   timeline: string;
+  exercises?: string[];
 }
 
 const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({ 
@@ -206,8 +217,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       image.src = photo;
       await image.decode();
 
-      // Поскольку проверка лица уже выполнена в FacePage.tsx,
-      // мы можем сразу анализировать изображение
       const faceResult = await analyzeImage(image);
       const result = generateHealthResults(faceResult, questionnaireData);
       
@@ -218,6 +227,128 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateDoctorRecommendations = (
+    risks: HealthRisks,
+    stress: StressIndicators,
+    skin: SkinHealth,
+    facial: FacialAnalysis,
+    questionnaire: HealthQuestionnaire
+  ): DoctorRecommendation[] => {
+    const recommendations: DoctorRecommendation[] = [];
+
+    // Рекомендации по стрессу и ментальному здоровью
+    if (stress.mental.burnoutRisk > 70 || stress.mental.anxietyLevel > 70) {
+      recommendations.push({
+        specialty: 'Психотерапевт/Психолог',
+        priority: 'high',
+        reason: 'Высокий уровень стресса и риск эмоционального выгорания',
+        examination: [
+          'Оценка уровня тревожности и депрессии',
+          'Диагностика эмоционального выгорания',
+          'Анализ копинг-стратегий'
+        ],
+        frequency: '1-2 раза в неделю в начале терапии',
+        urgency: 'В течение 2 недель'
+      });
+    }
+
+    if (stress.physical.sleepDeprivation > 70 || questionnaire.sleepQuality === 'poor') {
+      recommendations.push({
+        specialty: 'Сомнолог',
+        priority: 'high',
+        reason: 'Выраженные нарушения сна и накопленная усталость',
+        examination: [
+          'Полисомнография при необходимости',
+          'Оценка гигиены сна',
+          'Анализ циркадных ритмов'
+        ],
+        frequency: 'По назначению врача',
+        urgency: 'В течение месяца'
+      });
+    }
+
+    // Рекомендации по кожным заболеваниям
+    if (questionnaire.hasSkinConditions || skin.overall < 60) {
+      recommendations.push({
+        specialty: 'Дерматолог',
+        priority: questionnaire.hasSkinConditions ? 'high' : 'medium',
+        reason: 'Наличие кожных заболеваний или неудовлетворительное состояние кожи',
+        examination: [
+          'Дерматоскопия',
+          'Анализ состояния кожного барьера',
+          'Диагностика сопутствующих заболеваний'
+        ],
+        frequency: '1-2 раза в год',
+        urgency: 'В течение месяца'
+      });
+    }
+
+    // Рекомендации по хроническим заболеваниям
+    if (questionnaire.hasChronicDiseases) {
+      recommendations.push({
+        specialty: 'Терапевт',
+        priority: 'high',
+        reason: 'Наличие хронических заболеваний, требующих наблюдения',
+        examination: [
+          'Общий анализ крови и мочи',
+          'Биохимический анализ крови',
+          'Контроль основных показателей здоровья'
+        ],
+        frequency: 'Каждые 6 месяцев',
+        urgency: 'В течение 2 недель'
+      });
+    }
+
+    // Рекомендации по мышечному напряжению
+    if (facial.facialTension.overall > 70 || facial.posture.overall < 60) {
+      recommendations.push({
+        specialty: 'Остеопат/Невролог',
+        priority: 'medium',
+        reason: 'Выраженное мышечное напряжение и нарушения осанки',
+        examination: [
+          'Оценка мышечного тонуса',
+          'Анализ биомеханики позвоночника',
+          'Проверка неврологического статуса'
+        ],
+        frequency: 'По назначению специалиста',
+        urgency: 'В течение месяца'
+      });
+    }
+
+    // Рекомендации по питанию и ЖКТ
+    if (questionnaire.alcoholConsumption === 'high') {
+      recommendations.push({
+        specialty: 'Гастроэнтеролог/Диетолог',
+        priority: 'medium',
+        reason: 'Высокое потребление алкоголя и нагрузка на ЖКТ',
+        examination: [
+          'Биохимический анализ крови',
+          'УЗИ органов брюшной полости',
+          'Анализ пищевого дневника'
+        ],
+        frequency: '1 раз в год',
+        urgency: 'В течение 2 месяцев'
+      });
+    }
+
+    // Общая рекомендация по ежегодному чекапу
+    recommendations.push({
+      specialty: 'Терапевт для ежегодного чекапа',
+      priority: 'low',
+      reason: 'Профилактический осмотр и оценка общего состояния здоровья',
+      examination: [
+        'Общий и биохимический анализ крови',
+        'ЭКГ',
+        'Измерение артериального давления',
+        'Антропометрия'
+      ],
+      frequency: 'Ежегодно',
+      urgency: 'В течение 6 месяцев'
+    });
+
+    return recommendations;
   };
 
   const generateHealthResults = (
@@ -232,6 +363,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     const healthRisks = identifyHealthRisks(questionnaire);
     const detailedConclusion = generateDetailedConclusion(facialAnalysis, skinHealth, stressIndicators, lifestyleFactors, healthRisks, questionnaire);
     const recommendations = generateRecommendations(facialAnalysis, skinHealth, stressIndicators, lifestyleFactors, healthRisks);
+    const doctorRecommendations = generateDoctorRecommendations(healthRisks, stressIndicators, skinHealth, facialAnalysis, questionnaire);
 
     const overallScore = calculateOverallScore(
       facialAnalysis,
@@ -249,6 +381,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       healthRisks,
       detailedConclusion,
       recommendations,
+      doctorRecommendations,
       warnings: generateWarnings(healthRisks, stressIndicators)
     };
   };
@@ -424,7 +557,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     const positiveAspects: string[] = [];
     const improvementAreas: string[] = [];
 
-    // Определяем положительные аспекты
     if (facial.symmetry > 80) {
       positiveAspects.push("отличная симметрия лица");
     }
@@ -441,7 +573,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       positiveAspects.push("отсутствие вредных привычек");
     }
 
-    // Определяем области для улучшения
     if (facial.eyeHealth.fatigueLevel > 60) {
       improvementAreas.push("усталость глаз");
     }
@@ -615,7 +746,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     skin: SkinHealth,
     stress: StressIndicators,
     lifestyle: LifestyleFactors,
-    risks: HealthRisks
+    healthRisks: HealthRisks
   ): Recommendation[] => {
     const recommendations: Recommendation[] = [];
 
@@ -625,9 +756,16 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Осанка и мышечное напряжение',
         priority: facial.facialTension.overall > 70 ? 'high' : 'medium',
         actions: [
-          'Ежедневная гимнастика для лица',
-          'Упражнения для шеи и плеч',
-          'Самомассаж височно-нижнечелюстной области'
+          'Ежедневная гимнастика для лица по 5-7 минут утром и вечером',
+          'Самомассаж височно-нижнечелюстного сустава круговыми движениями',
+          'Контроль положения головы при работе за компьютером',
+          'Растяжка мышц шеи с наклонами головы в разные стороны'
+        ],
+        exercises: [
+          'Упражнение "Лев": широко откройте рот и высуньте язык, напрягая все мышцы лица, затем расслабьтесь. Повторите 5 раз.',
+          'Массаж висков: круговыми движениями массируйте виски указательными пальцами 2-3 минуты',
+          'Движения челюстью: медленно открывайте и закрывайте рот, двигайте челюстью влево-вправо. 10 повторений.',
+          'Растяжка шеи: наклоните голову к правому плечу, задержитесь на 15 секунд, затем к левому. По 3 подхода.'
         ],
         timeline: '2-3 недели'
       });
@@ -639,9 +777,12 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Уход за кожей',
         priority: skin.overall < 60 ? 'high' : 'medium',
         actions: [
-          'Индивидуальный подбор уходовых средств',
-          'Регулярное увлажнение',
-          'Защита от солнца SPF 30+'
+          'Очищение кожи утром и вечером мягкими средствами без спирта',
+          'Использование увлажняющего крема с гиалуроновой кислотой',
+          'Ежедневная защита от солнца SPF 30+ даже в пасмурную погоду',
+          'Использование сыворотки с витамином C утром для улучшения тона кожи',
+          'Еженедельное применение увлажняющих масок',
+          'Обильное питье - не менее 2 литров воды в день'
         ],
         timeline: 'непрерывно'
       });
@@ -653,9 +794,17 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Управление стрессом',
         priority: stress.overall > 70 ? 'high' : 'medium',
         actions: [
-          'Дыхательные упражнения 2 раза в день',
-          'Прогулки на свежем воздухе',
-          'Техники релаксации перед сном'
+          'Дыхательные упражнения 4-7-8: вдох 4 секунды, задержка 7 секунд, выдох 8 секунд. 5 циклов утром и вечером',
+          'Прогулки на свежем воздухе минимум 30 минут в день',
+          'Техника прогрессивной мышечной релаксации перед сном',
+          'Ограничение потребления кофеина до 200 мг в день',
+          'Ведение дневника стресса для отслеживания триггеров',
+          'Практика осознанности через медитацию по 10 минут в день'
+        ],
+        exercises: [
+          'Дыхание 4-7-8: сядьте прямо, язык за верхние зубы. Вдох через нос 4 сек, задержка 7 сек, выдох через рот 8 сек. 5 повторов.',
+          'Прогрессивная релаксация: лежа, последовательно напрягайте и расслабляйте мышцы от пальцев ног до лица. 15 минут.',
+          'Медитация осознанности: сядьте удобно, сосредоточьтесь на дыхании. При появлении мыслей просто отмечайте их и возвращайтесь к дыханию.'
         ],
         timeline: '4-6 недель'
       });
@@ -667,11 +816,53 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Качество сна',
         priority: 'medium',
         actions: [
-          'Соблюдение режима сна',
-          'Создание комфортных условий для сна',
-          'Ограничение экранного времени перед сном'
+          'Соблюдение режима сна: подъем и отход ко сну в одно время даже в выходные',
+          'Создание ритуала перед сном: теплый душ, чтение, легкая растяжка',
+          'Оптимальная температура в спальне 18-20°C',
+          'Полное затемнение комнаты и устранение источников шума',
+          'Отказ от использования электронных устройств за 1 час до сна',
+          'Ограничение жидкости за 2 часа до сна'
         ],
         timeline: '2-3 недели'
+      });
+    }
+
+    // Рекомендации по питанию
+    if (lifestyle.nutrition.dietQuality < 60 || lifestyle.nutrition.alcoholImpact > 40) {
+      recommendations.push({
+        category: 'Питание и гидратация',
+        priority: lifestyle.nutrition.dietQuality < 50 ? 'medium' : 'low',
+        actions: [
+          'Сбалансированное питание с акцентом на овощи и белок',
+          'Употребление 2-2.5 литров воды в течение дня',
+          'Ограничение обработанных продуктов и сахара',
+          'Включение в рацион омега-3 жирных кислот',
+          'Контроль размера порций и регулярность приемов пищи',
+          'Ограничение алкоголя до 1-2 порций в неделю'
+        ],
+        timeline: 'постоянно'
+      });
+    }
+
+    // Рекомендации по физической активности
+    if (lifestyle.activity.physical < 60 || lifestyle.activity.sedentaryTime > 60) {
+      recommendations.push({
+        category: 'Физическая активность',
+        priority: 'medium',
+        actions: [
+          'Ежедневная ходьба не менее 10000 шагов',
+          'Силовые тренировки 2-3 раза в неделю',
+          'Растяжка и мобильность упражнения ежедневно',
+          'Перерывы каждые 45 минут при сидячей работе',
+          'Использование лестницы вместо лифта',
+          'Утренняя зарядка 10-15 минут'
+        ],
+        exercises: [
+          'Комплекс утренней зарядки: наклоны, повороты, приседания, отжимания от стола - 10-15 минут',
+          'Офисная гимнастика: вращения плечами, наклоны головы, растяжка спины - каждые 2 часа',
+          'Силовая тренировка: приседания, отжимания, планка - 20-30 минут 3 раза в неделю'
+        ],
+        timeline: 'постоянно'
       });
     }
 
@@ -682,15 +873,19 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
     const warnings: string[] = [];
     
     if (stress.mental.burnoutRisk > 80) {
-      warnings.push('Крайне высокий риск эмоционального выгорания - рекомендуется консультация специалиста');
+      warnings.push('Крайне высокий риск эмоционального выгорания - рекомендуется срочная консультация психолога или терапевта');
     }
     
     if (risks.chronicDiseases.length > 0) {
-      warnings.push('Наличие хронических заболеваний требует регулярного медицинского наблюдения');
+      warnings.push('Наличие хронических заболеваний требует регулярного медицинского наблюдения и соблюдения всех рекомендаций врача');
     }
     
     if (risks.lifestyleRisks.includes('Курение')) {
-      warnings.push('Курение значительно повышает риски для здоровья - рассмотрите программу отказа');
+      warnings.push('Курение значительно повышает риски сердечно-сосудистых заболеваний и рака - настоятельно рекомендуем обратиться в кабинет отказа от курения');
+    }
+
+    if (stress.physical.sleepDeprivation > 70) {
+      warnings.push('Выраженное недосыпание может серьезно влиять на здоровье - рекомендуется консультация сомнолога');
     }
 
     return warnings;
@@ -965,11 +1160,13 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       <div className={styles.detailedConclusion}>
         <div className={styles.conclusionHeader}>
           <Heart size={24} />
-          <h3>💫 Детальное заключение о состоянии здоровья</h3>
+          <h3>Детальное заключение о состоянии здоровья</h3>
         </div>
         
         <div className={styles.executiveSummary}>
-          <div className={styles.summaryIcon}>🎯</div>
+          <div className={styles.summaryIcon}>
+            <TrendingUp size={24} />
+          </div>
           <div className={styles.summaryContent}>
             <h4>Ключевые выводы</h4>
             <p>{analysisResult.detailedConclusion.executiveSummary}</p>
@@ -978,25 +1175,33 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
 
         <div className={styles.conclusionGrid}>
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>😊</div>
+            <div className={styles.sectionIcon}>
+              <Brain size={20} />
+            </div>
             <h4>Здоровье лица и осанка</h4>
             <p>{analysisResult.detailedConclusion.facialHealth}</p>
           </div>
 
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>✨</div>
+            <div className={styles.sectionIcon}>
+              <Shield size={20} />
+            </div>
             <h4>Состояние кожи</h4>
             <p>{analysisResult.detailedConclusion.skinAssessment}</p>
           </div>
 
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>🧠</div>
+            <div className={styles.sectionIcon}>
+              <Activity size={20} />
+            </div>
             <h4>Уровень стресса</h4>
             <p>{analysisResult.detailedConclusion.stressEvaluation}</p>
           </div>
 
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>🌱</div>
+            <div className={styles.sectionIcon}>
+              <Zap size={20} />
+            </div>
             <h4>Влияние образа жизни</h4>
             <p>{analysisResult.detailedConclusion.lifestyleImpact}</p>
           </div>
@@ -1006,13 +1211,15 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         <div className={styles.aspectsGrid}>
           <div className={styles.positiveAspects}>
             <div className={styles.aspectsHeader}>
-              <Smile size={20} />
+              <div className={styles.successIcon}>✓</div>
               <h4>Сильные стороны</h4>
             </div>
             <div className={styles.aspectsList}>
               {analysisResult.detailedConclusion.positiveAspects.map((aspect, index) => (
                 <div key={index} className={styles.positiveAspect}>
-                  <div className={styles.aspectBullet}>✓</div>
+                  <div className={styles.aspectBullet}>
+                    <ArrowRight size={14} />
+                  </div>
                   <span>{aspect}</span>
                 </div>
               ))}
@@ -1021,13 +1228,13 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
 
           <div className={styles.improvementAreas}>
             <div className={styles.aspectsHeader}>
-              <Frown size={20} />
+              <AlertCircle size={20} />
               <h4>Области для улучшения</h4>
             </div>
             <div className={styles.aspectsList}>
               {analysisResult.detailedConclusion.improvementAreas.map((area, index) => (
                 <div key={index} className={styles.improvementArea}>
-                  <div className={styles.aspectBullet}>⚡</div>
+                  <div className={styles.aspectBullet}>•</div>
                   <span>{area}</span>
                 </div>
               ))}
@@ -1036,11 +1243,127 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         </div>
 
         <div className={styles.preventiveSection}>
-          <div className={styles.sectionIcon}>🛡️</div>
+          <div className={styles.sectionIcon}>
+            <Shield size={20} />
+          </div>
           <h4>Профилактические меры</h4>
           <p>{analysisResult.detailedConclusion.preventiveMeasures}</p>
         </div>
       </div>
+
+      {/* Рекомендации по врачам */}
+      {analysisResult.doctorRecommendations && analysisResult.doctorRecommendations.length > 0 && (
+        <div className={styles.doctorRecommendations}>
+          <div className={styles.sectionHeader}>
+            <Stethoscope size={24} />
+            <h3>Рекомендации по медицинским консультациям</h3>
+          </div>
+          
+          <div className={styles.medicalNotice}>
+            <AlertCircle size={20} />
+            <div className={styles.noticeContent}>
+              <h4>Важная информация</h4>
+              <p>
+                На основе анализа выявлены показания для консультации со специалистами. 
+                Регулярные медицинские осмотры помогают предотвратить развитие заболеваний 
+                и сохранить здоровье на долгие годы.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.doctorTable}>
+            <div className={styles.tableHeader}>
+              <div className={styles.tableCell}>Специалист</div>
+              <div className={styles.tableCell}>Приоритет</div>
+              <div className={styles.tableCell}>Причина обращения</div>
+              <div className={styles.tableCell}>Рекомендуемые обследования</div>
+              <div className={styles.tableCell}>Частота посещения</div>
+              <div className={styles.tableCell}>Срок обращения</div>
+            </div>
+            
+            {analysisResult.doctorRecommendations
+              .sort((a, b) => {
+                const priorityOrder = { high: 0, medium: 1, low: 2 };
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+              })
+              .map((rec, index) => (
+              <div key={index} className={`${styles.tableRow} ${styles[`priority${rec.priority}`]}`}>
+                <div className={styles.tableCell}>
+                  <strong>{rec.specialty}</strong>
+                </div>
+                <div className={styles.tableCell}>
+                  <span className={`${styles.priorityBadge} ${styles[rec.priority]}`}>
+                    {rec.priority === 'high' ? 'Высокий' : rec.priority === 'medium' ? 'Средний' : 'Низкий'}
+                  </span>
+                </div>
+                <div className={styles.tableCell}>{rec.reason}</div>
+                <div className={styles.tableCell}>
+                  <ul className={styles.examinationList}>
+                    {rec.examination.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className={styles.tableCell}>{rec.frequency}</div>
+                <div className={styles.tableCell}>
+                  <span className={styles.urgency}>{rec.urgency}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.medicalGuidance}>
+            <h4>Как подготовиться к визиту к врачу:</h4>
+            <div className={styles.guidanceList}>
+              <div className={styles.guidanceItem}>
+                <div className={styles.guidanceNumber}>1</div>
+                <div className={styles.guidanceContent}>
+                  <strong>Соберите медицинскую документацию</strong>
+                  <p>Результаты предыдущих анализов, выписки из медицинских карт, список принимаемых препаратов</p>
+                </div>
+              </div>
+              <div className={styles.guidanceItem}>
+                <div className={styles.guidanceNumber}>2</div>
+                <div className={styles.guidanceContent}>
+                  <strong>Составьте список вопросов</strong>
+                  <p>Запишите все симптомы, которые вас беспокоят, и вопросы, которые хотите задать врачу</p>
+                </div>
+              </div>
+              <div className={styles.guidanceItem}>
+                <div className={styles.guidanceNumber}>3</div>
+                <div className={styles.guidanceContent}>
+                  <strong>Ведите дневник наблюдений</strong>
+                  <p>Отмечайте изменения в состоянии здоровья, особенности питания и режима дня</p>
+                </div>
+              </div>
+              <div className={styles.guidanceItem}>
+                <div className={styles.guidanceNumber}>4</div>
+                <div className={styles.guidanceContent}>
+                  <strong>Подготовьтесь к обследованию</strong>
+                  <p>Уточните требования к подготовке для конкретных анализов и исследований</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.emergencyNotice}>
+            <AlertCircle size={24} />
+            <div className={styles.emergencyContent}>
+              <h5>Когда требуется срочная медицинская помощь:</h5>
+              <ul>
+                <li>Острая боль любой локализации</li>
+                <li>Внезапное ухудшение зрения или слуха</li>
+                <li>Затрудненное дыхание или одышка</li>
+                <li>Сильное головокружение или потеря сознания</li>
+                <li>Резкое повышение температуры тела</li>
+              </ul>
+              <p className={styles.emergencyContact}>
+                При возникновении экстренных ситуаций немедленно обращайтесь в скорую помощь по телефону <strong>103</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Рекомендации */}
       {analysisResult.recommendations.length > 0 && (
@@ -1054,19 +1377,40 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
               <div key={index} className={`${styles.recommendationItem} ${styles[`priority${rec.priority}`]}`}>
                 <div className={styles.recommendationHeader}>
                   <h5>{rec.category}</h5>
-                  <span className={styles.priorityBadge}>{rec.priority === 'high' ? 'Высокий приоритет' : rec.priority === 'medium' ? 'Средний приоритет' : 'Низкий приоритет'}</span>
+                  <span className={styles.priorityBadge}>
+                    {rec.priority === 'high' ? 'Высокий приоритет' : rec.priority === 'medium' ? 'Средний приоритет' : 'Низкий приоритет'}
+                  </span>
                 </div>
-                <div className={styles.actionsList}>
-                  {rec.actions.map((action, actionIndex) => (
-                    <div key={actionIndex} className={styles.actionItem}>
-                      <div className={styles.actionBullet}>•</div>
-                      <span>{action}</span>
+                
+                <div className={styles.actionsSection}>
+                  <h6>Конкретные действия:</h6>
+                  <div className={styles.actionsList}>
+                    {rec.actions.map((action, actionIndex) => (
+                      <div key={actionIndex} className={styles.actionItem}>
+                        <div className={styles.actionBullet}>•</div>
+                        <span>{action}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {rec.exercises && rec.exercises.length > 0 && (
+                  <div className={styles.exercisesSection}>
+                    <h6>Практические упражнения:</h6>
+                    <div className={styles.exercisesList}>
+                      {rec.exercises.map((exercise, exerciseIndex) => (
+                        <div key={exerciseIndex} className={styles.exerciseItem}>
+                          <div className={styles.exerciseNumber}>{exerciseIndex + 1}</div>
+                          <span>{exercise}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+
                 <div className={styles.timeline}>
                   <Clock size={14} />
-                  <span>Рекомендуемый срок: {rec.timeline}</span>
+                  <span>Рекомендуемый срок выполнения: {rec.timeline}</span>
                 </div>
               </div>
             ))}
@@ -1093,8 +1437,8 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       )}
 
       <div className={styles.mediapipeInfo}>
-        <p>🎭 Анализ выполнен с использованием технологии MediaPipe для анализа лица и комплексной оценки 24 показателей здоровья</p>
-        <p>Информация в программе носит справочный характер и не заменяет консультацию специалиста. Для точной оценки здоровья рекомендуем обратиться к врачу.</p>
+        <p>Анализ выполнен с использованием технологии MediaPipe для анализа лица и комплексной оценки 24 показателей здоровья</p>
+        <p><strong>Важно:</strong> Информация в программе носит справочный характер и не заменяет консультацию специалиста. Для точной оценки здоровья рекомендуем обратиться к врачу.</p>
       </div>
     </div>
   );
