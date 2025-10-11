@@ -756,10 +756,10 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Осанка и мышечное напряжение',
         priority: facial.facialTension.overall > 70 ? 'high' : 'medium',
         actions: [
-          'Ежедневная гимнастика для лица по 5-7 минут утром и вечером',
-          'Самомассаж височно-нижнечелюстного сустава круговыми движениями',
-          'Контроль положения головы при работе за компьютером',
-          'Растяжка мышц шеи с наклонами головы в разные стороны'
+          '• Ежедневная гимнастика для лица по 5-7 минут утром и вечером',
+          '• Самомассаж височно-нижнечелюстного сустава круговыми движениями',
+          '• Контроль положения головы при работе за компьютером',
+          '• Растяжка мышц шеи с наклонами головы в разные стороны'
         ],
         exercises: [
           'Упражнение "Лев": широко откройте рот и высуньте язык, напрягая все мышцы лица, затем расслабьтесь. Повторите 5 раз.',
@@ -1369,7 +1369,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
                   <div className={styles.actionsList}>
                     {rec.actions.map((action, actionIndex) => (
                       <div key={actionIndex} className={styles.actionItem}>
-                        <div className={styles.actionBullet}>•</div>
                         <span>{action}</span>
                       </div>
                     ))}
@@ -1379,19 +1378,18 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
                 {rec.exercises && rec.exercises.length > 0 && (
                   <div className={styles.exercisesSection}>
                     <h6>Практические упражнения:</h6>
-                    <div className={styles.exercisesList}>
-                      {rec.exercises.map((exercise, exerciseIndex) => (
-                        <div key={exerciseIndex} className={styles.exerciseItem}>
-                          <div className={styles.exerciseNumber}>{exerciseIndex + 1}</div>
-                          <span>{exercise}</span>
-                        </div>
-                      ))}
-                    </div>
+                   <div className={styles.exercisesList}>
+                    {rec.exercises.map((exercise, exerciseIndex) => (
+                      <div key={exerciseIndex} className={styles.exerciseRow}>
+                        <div className={styles.exerciseNumber}>{exerciseIndex + 1}</div>
+                        <span>{exercise}</span>
+                      </div>
+                    ))}
+                  </div>
                   </div>
                 )}
 
                 <div className={styles.timeline}>
-                  <Clock size={14} />
                   <span>Рекомендуемый срок выполнения: {rec.timeline}</span>
                 </div>
               </div>
