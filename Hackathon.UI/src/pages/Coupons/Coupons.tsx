@@ -1,153 +1,277 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { useTickets } from '../../hooks/useTickets';
 import styles from './Coupons.module.scss';
-import { mockClinics, mockDoctors, mockAppointments } from '../../data/mockData';
-import type { Doctor, Appointment, BookingFormData } from '../../types';
+
+// Типы данных
+interface Clinic {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+}
+
+interface Doctor {
+  id: string;
+  name: string;
+  specialty: string;
+  experience: number;
+  rating: number;
+  clinicId: string;
+  photo?: string;
+}
+
+interface Appointment {
+  id: string;
+  doctorId: string;
+  date: string;
+  time: string;
+  isBooked: boolean;
+  userName?: string;
+  userEmail?: string;
+}
+
+interface BookingFormData {
+  name: string;
+  email: string;
+}
 
 interface SelectedAppointment {
-  appointment: Appointment;
   doctor: Doctor;
+  appointment: Appointment;
 }
 
-interface ExpandedDoctor {
-  [doctorId: string]: boolean;
-}
+// Моковые данные
+const mockClinics: Clinic[] = [
+  {
+    id: '1',
+    name: 'Городская поликлиника №1',
+    address: 'ул. Центральная, д. 10',
+    phone: '+7 (495) 123-45-67'
+  },
+  {
+    id: '2',
+    name: 'Диагностический центр "Здоровье"',
+    address: 'пр. Мира, д. 25',
+    phone: '+7 (495) 234-56-78'
+  },
+  {
+    id: '3',
+    name: 'Клиника современной медицины',
+    address: 'ул. Ленина, д. 15',
+    phone: '+7 (495) 345-67-89'
+  }
+];
 
-// Функция для получения только ближайшего месяца
-const getNearestMonthAppointments = (appointments: Appointment[]) => {
-  const now = new Date();
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+const mockDoctors: Doctor[] = [
+  {
+    id: '1',
+    name: 'Иванова Анна Сергеевна',
+    specialty: 'Терапевт',
+    experience: 12,
+    rating: 4.8,
+    clinicId: '1'
+  },
+  {
+    id: '2',
+    name: 'Петров Дмитрий Владимирович',
+    specialty: 'Кардиолог',
+    experience: 15,
+    rating: 4.9,
+    clinicId: '1'
+  },
+  {
+    id: '3',
+    name: 'Сидорова Елена Викторовна',
+    specialty: 'Невролог',
+    experience: 10,
+    rating: 4.7,
+    clinicId: '2'
+  },
+  {
+    id: '4',
+    name: 'Козлов Алексей Иванович',
+    specialty: 'Хирург',
+    experience: 20,
+    rating: 5.0,
+    clinicId: '3'
+  },
+  {
+    id: '5',
+    name: 'Фролова Мария Петровна',
+    specialty: 'Офтальмолог',
+    experience: 8,
+    rating: 4.6,
+    clinicId: '2'
+  },
+  {
+    id: '6',
+    name: 'Николаев Сергей Александрович',
+    specialty: 'Отоларинголог',
+    experience: 11,
+    rating: 4.8,
+    clinicId: '3'
+  }
+];
+
+const generateMockAppointments = (): Appointment[] => {
+  const appointments: Appointment[] = [];
+  const today = new Date();
   
-  return appointments.filter(apt => {
-    const aptDate = new Date(apt.date);
-    return aptDate >= now && aptDate < nextMonth;
-  });
-};
-
-const groupAppointmentsByMonth = (appointments: Appointment[]) => {
-  const grouped: { [key: string]: { [key: string]: Appointment[] } } = {};
-
-  appointments.forEach(apt => {
-    const date = new Date(apt.date);
-    const monthKey = date.toLocaleString('ru-RU', { year: 'numeric', month: 'long' });
-    const dateKey = apt.date;
-
-    if (!grouped[monthKey]) {
-      grouped[monthKey] = {};
-    }
-    if (!grouped[monthKey][dateKey]) {
-      grouped[monthKey][dateKey] = [];
-    }
-    grouped[monthKey][dateKey].push(apt);
-  });
-
-  return grouped;
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const weekday = date.toLocaleString('ru-RU', { weekday: 'short' });
-  return { day, weekday };
-};
-
-const preprocessData = () => {
-  const clinicMap = new Map(mockClinics.map(c => [c.id, c]));
-  const doctorMap = new Map(mockDoctors.map(d => [d.id, d]));
-  
-  const appointmentsByDoctor = new Map<string, Appointment[]>();
-  
-  // Фильтруем только ближайшие appointments
-  mockAppointments.forEach(apt => {
-    const aptDate = new Date(apt.date);
-    const now = new Date();
-    // Показываем только будущие даты
-    if (aptDate >= now) {
-      if (!appointmentsByDoctor.has(apt.doctorId)) {
-        appointmentsByDoctor.set(apt.doctorId, []);
-      }
-      appointmentsByDoctor.get(apt.doctorId)!.push(apt);
-    }
-  });
-
-  const groupedAppointmentsByDoctor = new Map<string, ReturnType<typeof groupAppointmentsByMonth>>();
-  appointmentsByDoctor.forEach((appointments, doctorId) => {
-    // Берем только ближайший месяц для каждого врача
-    const nearestMonthAppointments = getNearestMonthAppointments(appointments);
-    if (nearestMonthAppointments.length > 0) {
-      groupedAppointmentsByDoctor.set(doctorId, groupAppointmentsByMonth(nearestMonthAppointments));
-    }
-  });
-
-  return { clinicMap, doctorMap, groupedAppointmentsByDoctor };
-};
-
-const Coupons: React.FC = () => {
-  const [selectedClinic, setSelectedClinic] = useState<string>('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedAppointment, setSelectedAppointment] = useState<SelectedAppointment | null>(null);
-  const [bookingForm, setBookingForm] = useState<BookingFormData>({ name: '', email: '' });
-  const [isBooked, setIsBooked] = useState(false);
-  const [appointments, setAppointments] = useState(mockAppointments);
-  const [expandedDoctors, setExpandedDoctors] = useState<ExpandedDoctor>({});
-  const [visibleDoctorsCount, setVisibleDoctorsCount] = useState<number>(5);
-
-  const { clinicMap, doctorMap, groupedAppointmentsByDoctor } = useMemo(() => preprocessData(), []);
-
-  const specialties = useMemo(() => {
-    return Array.from(new Set(mockDoctors.map(d => d.specialty)));
-  }, []);
-
-  const filteredDoctors = useMemo(() => {
-    const filtered = mockDoctors.filter(doctor => {
-      // Проверяем, есть ли у врача доступные слоты в ближайшем месяце
-      const hasAvailableSlots = groupedAppointmentsByDoctor.has(doctor.id);
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    
+    if (date.getDay() === 0 || date.getDay() === 6) continue; // Пропускаем выходные
+    
+    const dateString = date.toISOString().split('T')[0];
+    
+    mockDoctors.forEach(doctor => {
+      // Генерируем 3-4 временных слота на день для каждого врача
+      const timeSlots = ['09:00', '11:00', '14:00', '16:00'];
+      const slotsCount = 3 + Math.floor(Math.random() * 2);
       
-      const matchesClinic = !selectedClinic || doctor.clinicId === selectedClinic;
-      const matchesSpecialty = !selectedSpecialty || doctor.specialty === selectedSpecialty;
-      const matchesSearch = !searchTerm ||
-        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-
-      return matchesClinic && matchesSpecialty && matchesSearch && hasAvailableSlots;
+      timeSlots.slice(0, slotsCount).forEach(time => {
+        appointments.push({
+          id: `apt_${doctor.id}_${dateString}_${time}`,
+          doctorId: doctor.id,
+          date: dateString,
+          time: time,
+          isBooked: Math.random() > 0.8 // 20% записей занято
+        });
+      });
     });
+  }
+  
+  return appointments;
+};
 
-    return filtered;
-  }, [selectedClinic, selectedSpecialty, searchTerm, groupedAppointmentsByDoctor]);
+export default function Coupons() {
+  const { user } = useAuth();
+  const { addTicket } = useTickets(user);
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [appointments, setAppointments] = useState<Appointment[]>(generateMockAppointments());
+  const [selectedAppointment, setSelectedAppointment] = useState<SelectedAppointment | null>(null);
+  const [bookingForm, setBookingForm] = useState<BookingFormData>({
+    name: user?.email?.split('@')[0] || '',
+    email: user?.email || ''
+  });
+  const [isBooked, setIsBooked] = useState(false);
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
 
-  // Показываем только ограниченное количество врачей
-  const visibleDoctors = useMemo(() => {
-    return filteredDoctors.slice(0, visibleDoctorsCount);
-  }, [filteredDoctors, visibleDoctorsCount]);
-
-  const handleShowMore = useCallback(() => {
-    setVisibleDoctorsCount(prev => prev + 5);
+  // Получение уникальных специальностей
+  const specialties = useMemo(() => {
+    const specs = mockDoctors.map(doctor => doctor.specialty);
+    return ['all', ...Array.from(new Set(specs))];
   }, []);
 
-  const handleShowLess = useCallback(() => {
-    setVisibleDoctorsCount(5);
+  // Получение врачей с учетом фильтра
+  const filteredDoctors = useMemo(() => {
+    return selectedSpecialty === 'all' 
+      ? mockDoctors 
+      : mockDoctors.filter(doctor => doctor.specialty === selectedSpecialty);
+  }, [selectedSpecialty]);
+
+  // Получение доступных дат
+  const availableDates = useMemo(() => {
+    const dates = Array.from(new Set(appointments.map(apt => apt.date)))
+      .sort()
+      .filter(date => {
+        if (!selectedSpecialty || selectedSpecialty === 'all') return true;
+        return appointments.some(apt => 
+          apt.date === date && 
+          filteredDoctors.some(doctor => doctor.id === apt.doctorId)
+        );
+      });
+    
+    return dates;
+  }, [appointments, selectedSpecialty, filteredDoctors]);
+
+  // Получение дат для текущей недели
+  const currentWeekDates = useMemo(() => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() + currentWeekOffset * 7);
+    
+    const weekDates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      if (availableDates.includes(dateString)) {
+        weekDates.push(dateString);
+      }
+    }
+    
+    return weekDates;
+  }, [availableDates, currentWeekOffset]);
+
+  // Получение клиники для врача
+  const getClinicForDoctor = useCallback((doctorId: string) => {
+    const doctor = mockDoctors.find(d => d.id === doctorId);
+    if (!doctor) return null;
+    return mockClinics.find(clinic => clinic.id === doctor.clinicId) || null;
   }, []);
 
-  const toggleDoctorExpanded = useCallback((doctorId: string) => {
-    setExpandedDoctors(prev => ({
+  // Получение доступных записей для врача на выбранную дату
+  const getDoctorAppointments = useCallback((doctorId: string, date: string) => {
+    return appointments.filter(apt => 
+      apt.doctorId === doctorId && 
+      apt.date === date &&
+      !apt.isBooked
+    );
+  }, [appointments]);
+
+  // Обработчик выбора записи
+  const handleAppointmentSelect = useCallback((doctor: Doctor, appointment: Appointment) => {
+    setSelectedAppointment({ doctor, appointment });
+    setIsBooked(false);
+  }, []);
+
+  // Обработчик изменений в форме
+  const handleBookingFormChange = useCallback((field: keyof BookingFormData, value: string) => {
+    setBookingForm(prev => ({
       ...prev,
-      [doctorId]: !prev[doctorId]
+      [field]: value
     }));
   }, []);
 
-  const handleSlotClick = useCallback((appointment: Appointment, doctor: Doctor) => {
-    if (!appointment.isBooked) {
-      setSelectedAppointment({ appointment, doctor });
-      setIsBooked(false);
-      setBookingForm({ name: '', email: '' });
+  // Функция для генерации и отправки PDF талона
+  const generateAndSendTicketPDF = useCallback(async (ticketData: any): Promise<boolean> => {
+    try {
+      // В реальном приложении здесь был бы вызов API для генерации PDF
+      console.log('Генерация PDF талона:', ticketData);
+      
+      // Имитация задержки генерации PDF
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // В реальном приложении здесь был бы код для:
+      // 1. Генерации PDF на сервере
+      // 2. Отправки на email
+      // 3. Сохранения в базу данных
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка при генерации PDF:', error);
+      return false;
     }
   }, []);
 
-  const handleBooking = useCallback((e: React.FormEvent) => {
+  // Обработчик записи на прием
+  const handleBooking = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (selectedAppointment && bookingForm.name && bookingForm.email) {
+      const clinic = getClinicForDoctor(selectedAppointment.doctor.id);
+      
+      if (!clinic) {
+        alert('Ошибка: не найдена информация о поликлинике');
+        return;
+      }
+
+      // Обновляем состояние записи
       setAppointments(prev =>
         prev.map(apt =>
           apt.id === selectedAppointment.appointment.id
@@ -156,304 +280,331 @@ const Coupons: React.FC = () => {
         )
       );
 
-      setIsBooked(true);
+      // Создаем данные для талона
+      const ticketData = {
+        patientName: bookingForm.name,
+        patientEmail: bookingForm.email,
+        doctorName: selectedAppointment.doctor.name,
+        doctorSpecialty: selectedAppointment.doctor.specialty,
+        clinicName: clinic.name,
+        clinicAddress: clinic.address,
+        appointmentDate: new Date(selectedAppointment.appointment.date).toLocaleDateString('ru-RU', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }),
+        appointmentTime: selectedAppointment.appointment.time,
+        appointmentId: selectedAppointment.appointment.id,
+        status: 'active' as const
+      };
 
-      setTimeout(() => {
-        setSelectedAppointment(null);
-        setBookingForm({ name: '', email: '' });
-      }, 3000);
+      // Добавляем талон в хранилище
+      addTicket(ticketData);
+
+      // Генерируем и отправляем PDF талон
+      const pdfGenerated = await generateAndSendTicketPDF(ticketData);
+
+      if (pdfGenerated) {
+        setIsBooked(true);
+        
+        setTimeout(() => {
+          setSelectedAppointment(null);
+          setBookingForm({ name: '', email: '' });
+        }, 3000);
+      } else {
+        alert('Ошибка при создании талона. Пожалуйста, попробуйте еще раз.');
+      }
     }
-  }, [selectedAppointment, bookingForm]);
+  }, [selectedAppointment, bookingForm, getClinicForDoctor, generateAndSendTicketPDF, addTicket]);
 
-  const handleCloseModal = useCallback(() => {
-    setSelectedAppointment(null);
-    setIsBooked(false);
-    setBookingForm({ name: '', email: '' });
+  // Форматирование даты
+  const formatDate = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
   }, []);
 
-  const Slot = React.memo(({ slot, doctor }: { slot: Appointment; doctor: Doctor }) => (
-    <div
-      className={`${styles.slot} ${
-        slot.isBooked ? styles.slotBooked : styles.slotAvailable
-      }`}
-      onClick={() => handleSlotClick(slot, doctor)}
-    >
-      {slot.time}
-    </div>
-  ));
+  // Получение названия дня недели
+  const getDayName = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { weekday: 'long' });
+  }, []);
 
-  const DayCard = React.memo(({ date, slots, doctor }: { date: string; slots: Appointment[]; doctor: Doctor }) => {
-    const { day, weekday } = useMemo(() => formatDate(date), [date]);
-    
-    return (
-      <div className={styles.dayCard}>
-        <div className={styles.dayHeader}>
-          <div>{day}</div>
-          <div className={styles.weekday}>{weekday}</div>
-        </div>
-        <div className={styles.slots}>
-          {slots.length > 0 ? (
-            slots.map(slot => (
-              <Slot key={slot.id} slot={slot} doctor={doctor} />
-            ))
-          ) : (
-            <div className={styles.noSlots}>Нет слотов</div>
-          )}
-        </div>
-      </div>
-    );
-  });
+  // Навигация по неделям
+  const handlePrevWeek = useCallback(() => {
+    setCurrentWeekOffset(prev => prev - 1);
+  }, []);
 
-  const MonthSection = React.memo(({ month, dates, doctor }: { month: string; dates: { [key: string]: Appointment[] }; doctor: Doctor }) => (
-    <div className={styles.monthSection}>
-      <div className={styles.monthTitle}>
-        <Calendar size={20} />
-        {month}
-      </div>
-      <div className={styles.daysGrid}>
-        {Object.entries(dates).map(([date, slots]) => (
-          <DayCard key={date} date={date} slots={slots} doctor={doctor} />
-        ))}
-      </div>
-    </div>
-  ));
+  const handleNextWeek = useCallback(() => {
+    setCurrentWeekOffset(prev => prev + 1);
+  }, []);
 
-  const DoctorCard = React.memo(({ doctor, isExpanded }: { doctor: Doctor; isExpanded: boolean }) => {
-    const clinic = clinicMap.get(doctor.clinicId);
-    const groupedAppointments = groupedAppointmentsByDoctor.get(doctor.id);
-
-    if (!groupedAppointments) return null;
-
-    return (
-      <div className={styles.doctorCard}>
-        <div 
-          className={styles.doctorHeader}
-          onClick={() => toggleDoctorExpanded(doctor.id)}
-          style={{ cursor: 'pointer' }}
-        >
-          <img
-            src={doctor.photoUrl}
-            alt={doctor.name}
-            className={styles.doctorPhoto}
-          />
-          <div className={styles.doctorInfo}>
-            <h2 className={styles.doctorName}>{doctor.name}</h2>
-            <div className={styles.doctorSpecialty}>{doctor.specialty}</div>
-            {clinic && (
-              <div className={styles.clinicInfo}>
-                <MapPin size={16} />
-                <span>{clinic.name}, {clinic.address}</span>
-              </div>
-            )}
-          </div>
-          <div className={styles.expandIcon}>
-            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </div>
-        </div>
-
-        {isExpanded && (
-          <div className={styles.calendar}>
-            {Object.entries(groupedAppointments).map(([month, dates]) => (
-              <MonthSection key={month} month={month} dates={dates} doctor={doctor} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  });
+  // Сброс фильтров
+  const handleResetFilters = useCallback(() => {
+    setSelectedSpecialty('all');
+    setSelectedDate('');
+    setCurrentWeekOffset(0);
+  }, []);
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Запись на прием</h1>
-        <p className={styles.subtitle}>Выберите врача и удобное время для визита</p>
+        <p className={styles.subtitle}>
+          Выберите специалиста и удобное время для записи
+        </p>
       </div>
 
+      {/* Фильтры */}
       <div className={styles.filters}>
-        <div className={styles.filterGrid}>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Город</label>
-            <select
-              className={styles.filterSelect}
-              value={selectedClinic}
-              onChange={(e) => setSelectedClinic(e.target.value)}
-            >
-              <option value="">Все поликлиники</option>
-              {mockClinics.map(clinic => (
-                <option key={clinic.id} value={clinic.id}>
-                  {clinic.name} - {clinic.city}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Специальность</label>
-            <select
-              className={styles.filterSelect}
-              value={selectedSpecialty}
-              onChange={(e) => setSelectedSpecialty(e.target.value)}
-            >
-              <option value="">Все специальности</option>
-              {specialties.map(specialty => (
-                <option key={specialty} value={specialty}>
-                  {specialty}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Поиск врача</label>
-            <input
-              type="text"
-              className={styles.filterInput}
-              placeholder="Имя или специальность..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.resultsInfo}>
-        Найдено врачей: {filteredDoctors.length}
-        {filteredDoctors.length > visibleDoctorsCount && (
-          <span> (показано: {visibleDoctors.length})</span>
-        )}
-      </div>
-
-      <div className={styles.doctorsList}>
-        {visibleDoctors.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyStateIcon}>🔍</div>
-            <div className={styles.emptyStateTitle}>Врачи не найдены</div>
-            <div className={styles.emptyStateText}>
-              {filteredDoctors.length === 0 
-                ? "Попробуйте изменить параметры фильтрации"
-                : "Нет доступных записей в ближайшем месяце"
-              }
-            </div>
-          </div>
-        ) : (
-          <>
-            {visibleDoctors.map(doctor => (
-              <DoctorCard 
-                key={doctor.id} 
-                doctor={doctor} 
-                isExpanded={expandedDoctors[doctor.id] || false}
-              />
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Специальность:</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedSpecialty}
+            onChange={(e) => setSelectedSpecialty(e.target.value)}
+          >
+            {specialties.map(specialty => (
+              <option key={specialty} value={specialty}>
+                {specialty === 'all' ? 'Все специальности' : specialty}
+              </option>
             ))}
-            
-            {/* Кнопки показать еще/скрыть */}
-            {filteredDoctors.length > visibleDoctorsCount && (
-              <div className={styles.showMoreContainer}>
-                <button className={styles.showMoreButton} onClick={handleShowMore}>
-                  Показать еще {Math.min(5, filteredDoctors.length - visibleDoctorsCount)} врачей
-                </button>
-              </div>
-            )}
-            
-            {visibleDoctorsCount > 5 && (
-              <div className={styles.showMoreContainer}>
-                <button className={styles.showLessButton} onClick={handleShowLess}>
-                  Скрыть список
-                </button>
-              </div>
-            )}
-          </>
-        )}
+          </select>
+        </div>
+
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Дата приема:</label>
+          <select
+            className={styles.filterSelect}
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            <option value="">Любая дата</option>
+            {availableDates.map(date => (
+              <option key={date} value={date}>
+                {formatDate(date)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button className={styles.resetButton} onClick={handleResetFilters}>
+          Сбросить фильтры
+        </button>
       </div>
 
+      {/* Навигация по неделям */}
+      <div className={styles.weekNavigation}>
+        <button className={styles.navButton} onClick={handlePrevWeek}>
+          <ChevronLeft size={20} />
+          Предыдущая неделя
+        </button>
+        
+        <div className={styles.currentWeek}>
+          Неделя {currentWeekOffset === 0 ? 'текущая' : 
+                  currentWeekOffset > 0 ? `+${currentWeekOffset}` : currentWeekOffset}
+        </div>
+        
+        <button className={styles.navButton} onClick={handleNextWeek}>
+          Следующая неделя
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      {/* Список врачей и расписание */}
+      <div className={styles.doctorsGrid}>
+        {filteredDoctors.map(doctor => {
+          const clinic = getClinicForDoctor(doctor.id);
+          
+          return (
+            <div key={doctor.id} className={styles.doctorCard}>
+              <div className={styles.doctorHeader}>
+                <div className={styles.doctorAvatar}>
+                  <User size={32} />
+                </div>
+                <div className={styles.doctorInfo}>
+                  <h3 className={styles.doctorName}>{doctor.name}</h3>
+                  <p className={styles.doctorSpecialty}>{doctor.specialty}</p>
+                  <p className={styles.doctorExperience}>
+                    Опыт работы: {doctor.experience} лет
+                  </p>
+                  <div className={styles.doctorRating}>
+                    Рейтинг: {doctor.rating} ★
+                  </div>
+                </div>
+              </div>
+
+              {clinic && (
+                <div className={styles.clinicInfo}>
+                  <MapPin size={16} />
+                  <span>{clinic.name}</span>
+                  <br />
+                  <span className={styles.clinicAddress}>{clinic.address}</span>
+                </div>
+              )}
+
+              {/* Расписание на неделю */}
+              <div className={styles.schedule}>
+                <h4 className={styles.scheduleTitle}>Доступные записи:</h4>
+                <div className={styles.weekSchedule}>
+                  {currentWeekDates.map(date => {
+                    const dayAppointments = getDoctorAppointments(doctor.id, date);
+                    
+                    return (
+                      <div key={date} className={styles.daySchedule}>
+                        <div className={styles.dayHeader}>
+                          <div className={styles.dayName}>
+                            {getDayName(date)}
+                          </div>
+                          <div className={styles.date}>
+                            {new Date(date).getDate()}
+                          </div>
+                        </div>
+                        
+                        <div className={styles.timeSlots}>
+                          {dayAppointments.map(apt => (
+                            <button
+                              key={apt.id}
+                              className={styles.timeSlot}
+                              onClick={() => handleAppointmentSelect(doctor, apt)}
+                            >
+                              <Clock size={14} />
+                              {apt.time}
+                            </button>
+                          ))}
+                          
+                          {dayAppointments.length === 0 && (
+                            <div className={styles.noSlots}>
+                              Нет записей
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Модальное окно записи */}
       {selectedAppointment && (
-        <div className={styles.modal} onClick={handleCloseModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            {!isBooked ? (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            {isBooked ? (
+              <div className={styles.successMessage}>
+                <CheckCircle size={48} className={styles.successIcon} />
+                <h3>Запись успешно оформлена!</h3>
+                <p>Талон сохранен в вашем профиле и отправлен на email.</p>
+                <p>Вы можете скачать его в любое время.</p>
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setSelectedAppointment(null)}
+                >
+                  Закрыть
+                </button>
+              </div>
+            ) : (
               <>
                 <div className={styles.modalHeader}>
-                  <h2 className={styles.modalTitle}>Запись на прием</h2>
-                  <button className={styles.closeButton} onClick={handleCloseModal}>
+                  <h2>Оформление записи</h2>
+                  <button
+                    className={styles.closeButton}
+                    onClick={() => setSelectedAppointment(null)}
+                  >
                     <X size={24} />
                   </button>
                 </div>
 
-                <div className={styles.appointmentInfo}>
-                  <div className={styles.infoRow}>
-                    <User size={20} />
-                    <span>{selectedAppointment.doctor.name}</span>
+                <div className={styles.appointmentDetails}>
+                  <h3>Детали приема:</h3>
+                  <div className={styles.detailItem}>
+                    <strong>Врач:</strong> {selectedAppointment.doctor.name}
                   </div>
-                  <div className={styles.infoRow}>
-                    <Calendar size={20} />
-                    <span>{new Date(selectedAppointment.appointment.date).toLocaleDateString('ru-RU', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}</span>
+                  <div className={styles.detailItem}>
+                    <strong>Специальность:</strong> {selectedAppointment.doctor.specialty}
                   </div>
-                  <div className={styles.infoRow}>
-                    <Clock size={20} />
-                    <span>{selectedAppointment.appointment.time}</span>
+                  <div className={styles.detailItem}>
+                    <strong>Дата:</strong> {formatDate(selectedAppointment.appointment.date)}
                   </div>
+                  <div className={styles.detailItem}>
+                    <strong>Время:</strong> {selectedAppointment.appointment.time}
+                  </div>
+                  {(() => {
+                    const clinic = getClinicForDoctor(selectedAppointment.doctor.id);
+                    return clinic ? (
+                      <>
+                        <div className={styles.detailItem}>
+                          <strong>Поликлиника:</strong> {clinic.name}
+                        </div>
+                        <div className={styles.detailItem}>
+                          <strong>Адрес:</strong> {clinic.address}
+                        </div>
+                      </>
+                    ) : null;
+                  })()}
                 </div>
 
-                <form className={styles.form} onSubmit={handleBooking}>
+                <form onSubmit={handleBooking} className={styles.bookingForm}>
+                  <h3>Данные пациента:</h3>
+                  
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Ваше имя</label>
+                    <label className={styles.formLabel}>
+                      <User size={18} />
+                      Фамилия и Имя
+                    </label>
                     <input
                       type="text"
                       className={styles.formInput}
-                      placeholder="Иван Иванов"
                       value={bookingForm.name}
-                      onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
+                      onChange={(e) => handleBookingFormChange('name', e.target.value)}
                       required
+                      placeholder="Введите ваше ФИО"
                     />
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Email для подтверждения</label>
+                    <label className={styles.formLabel}>
+                      <Mail size={18} />
+                      Email
+                    </label>
                     <input
                       type="email"
                       className={styles.formInput}
-                      placeholder="ivan@example.com"
                       value={bookingForm.email}
-                      onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                      onChange={(e) => handleBookingFormChange('email', e.target.value)}
                       required
+                      placeholder="Введите ваш email"
                     />
                   </div>
 
-                  <div className={styles.formActions}>
-                    <button
-                      type="button"
-                      className={`${styles.button} ${styles.buttonSecondary}`}
-                      onClick={handleCloseModal}
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      type="submit"
-                      className={`${styles.button} ${styles.buttonPrimary}`}
-                    >
-                      Записаться
-                    </button>
-                  </div>
+                  <button type="submit" className={styles.bookButton}>
+                    <Calendar size={20} />
+                    Подтвердить запись
+                  </button>
                 </form>
               </>
-            ) : (
-              <div className={styles.successMessage}>
-                <div className={styles.successTitle}>
-                  <CheckCircle size={32} />
-                  Запись успешно оформлена!
-                </div>
-                <p className={styles.successText}>
-                  Подтверждение отправлено на {bookingForm.email}
-                </p>
-              </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Сообщение если нет врачей */}
+      {filteredDoctors.length === 0 && (
+        <div className={styles.emptyState}>
+          <User size={48} />
+          <h3>Врачи не найдены</h3>
+          <p>Попробуйте изменить параметры фильтрации</p>
+          <button className={styles.resetButton} onClick={handleResetFilters}>
+            Сбросить фильтры
+          </button>
+        </div>
+      )}
     </div>
   );
-};
-
-export default Coupons;
+}

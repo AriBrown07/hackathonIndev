@@ -14,29 +14,62 @@ export default function Authorization({ onAuthSuccess }: AuthorizationProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     setLoading(true);
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
+        // Вход
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
           password,
         });
+        
         if (error) throw error;
+        
+        if (data.user) {
+          onAuthSuccess();
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
+        // Регистрация
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         });
+        
         if (error) throw error;
+        
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('Пользователь с таким email уже существует');
+        }
+        
+        setMessage('Регистрация успешна! Проверьте вашу почту для подтверждения.');
+        setEmail('');
+        setPassword('');
       }
-      onAuthSuccess();
     } catch (err: any) {
-      setError(err.message || 'Произошла ошибка');
+      console.error('Auth error:', err);
+      
+      // Более понятные сообщения об ошибках
+      if (err.message.includes('Invalid login credentials')) {
+        setError('Неверный email или пароль');
+      } else if (err.message.includes('Email not confirmed')) {
+        setError('Email не подтвержден. Проверьте вашу почту.');
+      } else if (err.message.includes('User already registered')) {
+        setError('Пользователь с таким email уже зарегистрирован');
+      } else if (err.message.includes('Password should be at least 6 characters')) {
+        setError('Пароль должен содержать минимум 6 символов');
+      } else {
+        setError(err.message || 'Произошла ошибка при авторизации');
+      }
     } finally {
       setLoading(false);
     }
@@ -112,6 +145,12 @@ export default function Authorization({ onAuthSuccess }: AuthorizationProps) {
             </div>
           )}
 
+          {message && (
+            <div className={styles.message}>
+              {message}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -136,6 +175,7 @@ export default function Authorization({ onAuthSuccess }: AuthorizationProps) {
             onClick={() => {
               setIsLogin(!isLogin);
               setError('');
+              setMessage('');
             }}
             className={styles.switchButton}
           >

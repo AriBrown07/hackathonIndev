@@ -1,157 +1,169 @@
 .container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
-  animation: gradientShift 15s ease infinite;
-  background-size: 200% 200%;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
-  animation: fadeInDown 0.8s ease;
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  margin-bottom: 40px;
 }
 
 .title {
-  font-size: 3rem;
-  font-weight: 800;
-  color: white;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 .subtitle {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
 }
 
+// Фильтры
 .filters {
-  max-width: 1400px;
-  margin: 0 auto 2rem;
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 30px;
+  padding: 20px;
   background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  animation: fadeInUp 0.8s ease 0.2s both;
-}
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.filterGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
 }
 
 .filterGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex: 1;
 }
 
 .filterLabel {
+  display: block;
   font-weight: 600;
-  color: #4a5568;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #333;
+  margin-bottom: 8px;
 }
 
-.filterSelect,
-.filterInput {
-  padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+.filterSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background: white;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
 
   &:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  &:hover {
-    border-color: #cbd5e0;
   }
 }
 
-.doctorsList {
-  max-width: 1400px;
-  margin: 0 auto;
+.resetButton {
+  padding: 10px 20px;
+  background: #f8f9fa;
+  color: #666;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+  }
+}
+
+// Навигация по неделям
+.weekNavigation {
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.currentWeek {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+// Сетка врачей
+.doctorsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .doctorCard {
   background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInUp 0.6s ease both;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   }
-
-  &:nth-child(1) { animation-delay: 0.1s; }
-  &:nth-child(2) { animation-delay: 0.2s; }
-  &:nth-child(3) { animation-delay: 0.3s; }
-  &:nth-child(4) { animation-delay: 0.4s; }
-  &:nth-child(5) { animation-delay: 0.5s; }
 }
 
 .doctorHeader {
   display: flex;
-  align-items: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #f7fafc;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.doctorPhoto {
-  width: 120px;
-  height: 120px;
+.doctorAvatar {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #667eea;
-  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.05);
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
 }
 
 .doctorInfo {
@@ -159,391 +171,310 @@
 }
 
 .doctorName {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
 }
 
 .doctorSpecialty {
-  font-size: 1.125rem;
+  font-size: 1rem;
   color: #667eea;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+}
+
+.doctorExperience {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.doctorRating {
+  font-size: 0.9rem;
+  color: #ffc107;
   font-weight: 600;
-  margin-bottom: 0.5rem;
 }
 
 .clinicInfo {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #718096;
-  font-size: 0.95rem;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px;
+  background: #f8f9ff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #555;
 }
 
-.calendar {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.clinicAddress {
+  font-size: 0.8rem;
+  color: #888;
 }
 
-.monthSection {
-  animation: fadeIn 0.5s ease;
+.schedule {
+  margin-top: 20px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.scheduleTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
 }
 
-.monthTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.daysGrid {
+.weekSchedule {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 }
 
-.dayCard {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border-radius: 12px;
-  padding: 1rem;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    border-color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-  }
+.daySchedule {
+  border: 2px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 12px;
 }
 
 .dayHeader {
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 0.75rem;
-  font-size: 0.95rem;
   text-align: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.weekday {
-  font-size: 0.75rem;
-  color: #718096;
-  font-weight: 500;
-  text-transform: uppercase;
+.dayName {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: lowercase;
 }
 
-.slots {
+.date {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.timeSlots {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
-.slot {
-  padding: 0.5rem;
+.timeSlot {
+  padding: 6px 8px;
+  background: #667eea;
+  color: white;
+  border: none;
   border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-  }
-
-  &:hover::before {
-    width: 300px;
-    height: 300px;
-  }
-}
-
-.slotAvailable {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
 
   &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    background: #5a6fd8;
+    transform: translateY(-1px);
   }
 
-  &:active {
-    transform: scale(0.98);
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
   }
-}
-
-.slotBooked {
-  background: #e2e8f0;
-  color: #a0aec0;
-  cursor: not-allowed;
-  border: 2px solid #cbd5e0;
 }
 
 .noSlots {
   text-align: center;
-  color: #a0aec0;
-  font-size: 0.875rem;
-  padding: 1rem;
+  font-size: 0.8rem;
+  color: #999;
+  padding: 8px;
 }
 
-.modal {
+// Модальное окно
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.3s ease;
-  backdrop-filter: blur(4px);
+  padding: 20px;
 }
 
-.modalContent {
+.modal {
   background: white;
-  padding: 2.5rem;
-  border-radius: 20px;
+  border-radius: 12px;
+  padding: 0;
   max-width: 500px;
-  width: 90%;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-50px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  padding: 24px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.modalTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #2d3748;
+.modalHeader h2 {
+  margin: 0;
+  color: #333;
 }
 
 .closeButton {
   background: none;
   border: none;
+  color: #666;
   cursor: pointer;
-  color: #718096;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.3s ease;
-  padding: 0.5rem;
-  border-radius: 8px;
 
   &:hover {
-    color: #2d3748;
-    background: #f7fafc;
-    transform: rotate(90deg);
+    background: #f5f5f5;
+    color: #333;
   }
 }
 
-.appointmentInfo {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  color: white;
+.appointmentDetails {
+  padding: 24px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.infoRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  font-size: 1rem;
+.appointmentDetails h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+}
 
-  &:last-child {
-    margin-bottom: 0;
+.detailItem {
+  margin-bottom: 8px;
+  color: #555;
+
+  strong {
+    color: #333;
   }
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.bookingForm {
+  padding: 24px;
+}
+
+.bookingForm h3 {
+  margin: 0 0 16px 0;
+  color: #333;
 }
 
 .formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 20px;
 }
 
 .formLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
-  color: #4a5568;
-  font-size: 0.95rem;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 .formInput {
-  padding: 0.875rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
 
   &:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
 }
 
-.formActions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.button {
-  flex: 1;
-  padding: 1rem;
+.bookButton {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border: none;
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-  }
-
-  &:hover::before {
-    width: 300px;
-    height: 300px;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-}
-
-.buttonPrimary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
   }
 }
 
-.buttonSecondary {
-  background: #e2e8f0;
-  color: #4a5568;
-
-  &:hover {
-    background: #cbd5e0;
-  }
-}
-
+// Сообщение об успехе
 .successMessage {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-  color: white;
-  padding: 1.5rem;
-  border-radius: 12px;
+  padding: 40px 24px;
   text-align: center;
-  animation: slideIn 0.4s ease;
 }
 
-.successTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.successIcon {
+  color: #28a745;
+  margin-bottom: 16px;
 }
 
-.successText {
-  font-size: 1rem;
-  opacity: 0.95;
+.successMessage h3 {
+  color: #333;
+  margin-bottom: 12px;
 }
 
+.successMessage p {
+  color: #666;
+  margin-bottom: 8px;
+}
+
+// Состояние пустого списка
 .emptyState {
   text-align: center;
-  padding: 4rem 2rem;
-  color: white;
-  animation: fadeInUp 0.8s ease;
+  padding: 60px 20px;
+  color: #666;
+
+  h3 {
+    color: #333;
+    margin: 16px 0 8px 0;
+  }
 }
 
-.emptyStateIcon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.emptyStateTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.emptyStateText {
-  font-size: 1.125rem;
-  opacity: 0.8;
-}
-
+// Адаптивность
 @media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
   .title {
     font-size: 2rem;
   }
 
-  .subtitle {
-    font-size: 1rem;
+  .doctorsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .weekSchedule {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .doctorHeader {
@@ -551,56 +482,13 @@
     text-align: center;
   }
 
-  .daysGrid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  .doctorAvatar {
+    align-self: center;
   }
 
-  .modalContent {
-    padding: 1.5rem;
-  }
-
-  .formActions {
+  .weekNavigation {
     flex-direction: column;
+    gap: 16px;
+    text-align: center;
   }
-}
-
-.resultsInfo {
-  margin-bottom: 20px;
-  color: #666;
-  font-size: 14px;
-}
-
-.showMoreContainer {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.showMoreButton, .showLessButton {
-  padding: 10px 20px;
-  border: 1px solid #007bff;
-  background: white;
-  color: #007bff;
-  border-radius: 6px;
-  cursor: pointer;
-  
-  &:hover {
-    background: #007bff;
-    color: white;
-  }
-}
-
-.showLessButton {
-  border-color: #6c757d;
-  color: #6c757d;
-  
-  &:hover {
-    background: #6c757d;
-    color: white;
-  }
-}
-
-.expandIcon {
-  margin-left: auto;
-  color: #666;
 }
