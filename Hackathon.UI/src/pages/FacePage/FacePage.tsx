@@ -7,6 +7,7 @@ import styles from './FacePage.module.scss';
 import { Link } from 'react-router-dom';
 import * as faceapi from '@vladmandic/face-api';
 import type { HealthQuestionnaire } from '../../types';
+import { usePDFGenerator } from '../../hooks/usePDFGenerator';
 
 interface FaceDetectionResult {
   detected: boolean;
@@ -47,6 +48,25 @@ export default function FaceScanner() {
     };
     loadModels();
   }, []);
+
+  const { contentRef, generatePDF } = usePDFGenerator();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Функция для сохранения PDF
+  const handleSavePDF = async () => {
+  if (!analysisResult || !questionnaireData) return;
+  
+  try {
+    setIsScanning(true);
+    await generatePDF(`health-report-${questionnaireData.userName}`);
+    setShowSaveModal(false);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Ошибка при создании PDF файла');
+  } finally {
+    setIsScanning(false);
+  }
+};
 
   // === Работа с камерой (остается без изменений) ===
   const startCamera = async () => {
@@ -125,9 +145,9 @@ export default function FaceScanner() {
 
       const detectionPromise = (async () => {
         const detection = await faceapi
-          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ 
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({
             scoreThreshold: 0.3,
-            inputSize: 512 
+            inputSize: 512
           }))
           .withFaceLandmarks(true);
 
@@ -141,7 +161,7 @@ export default function FaceScanner() {
         // Расчет Eye Aspect Ratio
         const leftEye = [36, 37, 38, 39, 40, 41];
         const rightEye = [42, 43, 44, 45, 46, 47];
-        
+
         const calculateEAR = (eyePoints: number[]) => {
           const A = distance(positions[eyePoints[1]], positions[eyePoints[5]]);
           const B = distance(positions[eyePoints[2]], positions[eyePoints[4]]);
@@ -152,17 +172,17 @@ export default function FaceScanner() {
         const eyeAspectRatio = (calculateEAR(leftEye) + calculateEAR(rightEye)) / 2;
 
         // Расчет открытости рта
-        const mouthOpenness = Math.abs(positions[62].y - positions[66].y) / 
-                             distance(positions[48], positions[54]);
+        const mouthOpenness = Math.abs(positions[62].y - positions[66].y) /
+          distance(positions[48], positions[54]);
 
         // Расчет симметрии
         const symmetry = calculateFaceSymmetry(landmarks);
 
-        return { 
-          detected: true, 
+        return {
+          detected: true,
           eyeAspectRatio: Math.min(1, eyeAspectRatio * 3),
           mouthOpenness: Math.min(1, mouthOpenness * 5),
-          symmetry 
+          symmetry
         };
       })();
 
@@ -175,7 +195,7 @@ export default function FaceScanner() {
 
   const distance = (point1: any, point2: any): number => {
     return Math.sqrt(
-      Math.pow(point1.x - point2.x, 2) + 
+      Math.pow(point1.x - point2.x, 2) +
       Math.pow(point1.y - point2.y, 2)
     );
   };
@@ -346,19 +366,19 @@ export default function FaceScanner() {
           </div>
         )}
 
-    {photo && faceDetectionStatus && !showResult && (
-  <div className={styles.scanningSection}>
-    <div className={styles.photoWrapper}>
-      <img src={photo} alt="Captured" className={styles.photo} />
-      {faceDetectionStatus === 'checking' && (
-        <div className={styles.scanAnimation}>
-          <div className={styles.scanLine}></div>
-        </div>
-      )}
-    </div>
-    <FaceDetectionStatusComponent />
-  </div>
-)}
+        {photo && faceDetectionStatus && !showResult && (
+          <div className={styles.scanningSection}>
+            <div className={styles.photoWrapper}>
+              <img src={photo} alt="Captured" className={styles.photo} />
+              {faceDetectionStatus === 'checking' && (
+                <div className={styles.scanAnimation}>
+                  <div className={styles.scanLine}></div>
+                </div>
+              )}
+            </div>
+            <FaceDetectionStatusComponent />
+          </div>
+        )}
 
         {showResult && photo && questionnaireData && (
           <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>
@@ -384,6 +404,7 @@ export default function FaceScanner() {
                     photo={photo}
                     questionnaireData={questionnaireData}
                     onAnalysisComplete={handleAnalysisComplete}
+                    contentRef={contentRef}
                   />
                 </div>
                 <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
@@ -397,7 +418,20 @@ export default function FaceScanner() {
                       <h3>Сохранить результат</h3>
                       <div className={styles.saveActions}>
                         <button>Сохранить в аккаунт</button>
-                        <button>Скачать PDF</button>
+                        <button
+                          onClick={handleSavePDF}
+                          disabled={isGeneratingPDF}
+                          className={styles.pdfButton}
+                        >
+                          {isGeneratingPDF ? (
+                            <>
+                              <div className={styles.spinner}></div>
+                              Создание PDF...
+                            </>
+                          ) : (
+                            '📄 Скачать PDF отчет'
+                          )}
+                        </button>
                       </div>
                       <button
                         className={styles.closeSaveModal}

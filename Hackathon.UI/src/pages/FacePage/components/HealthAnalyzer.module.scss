@@ -780,7 +780,6 @@
 }
 
 
-
 @media (max-width: 768px) {
   .recommendationItem,
   .warningItem {
@@ -901,5 +900,54 @@
   /* Уже всё в колонке, просто уменьшаем отступы */
   .recommendationGrid {
     gap: 0.75rem;
+    
+.healthReport {
+  // Существующие стили...
+  
+  // Оптимизации для PDF
+  background: white;
+  color: #333;
+  min-height: 100vh;
+  
+  // Убедитесь, что все контенты видны
+  .metricCard, .conclusionSection, .recommendationItem {
+    border: 1px solid #ddd;
+    background: #fafafa;
+    break-inside: avoid;
+  }
+  
+  // Улучшаем читаемость
+  h1, h2, h3, h4, h5, h6 {
+    color: #2c3e50 !important;
+  }
+  
+  // Увеличиваем контрастность
+  .metricFill {
+    background: #3498db !important;
+  }
+  
+  .progressFill {
+    background: #e74c3c !important;
+  }
+}
+
+// Скрываем элементы в PDF
+[data-pdf-hide] {
+  // Эти элементы будут скрыты при генерации PDF
+}
+
+// Медиа-запрос для печати
+@media print {
+  .healthReport {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    
+    // Убираем тени и градиенты для лучшей печати
+    .metricCard, .conclusionSection {
+      box-shadow: none !important;
+      border: 1px solid #000 !important;
+    }
   }
 }

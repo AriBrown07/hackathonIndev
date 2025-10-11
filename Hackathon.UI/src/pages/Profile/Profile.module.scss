@@ -367,6 +367,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-left: 25.8rem;
+  margin-top: 2rem;
 
   &:hover {
     background: #5a6fd8;
@@ -403,3 +405,226 @@
   }
 }
 
+
+// Добавьте эти стили в существующий файл
+
+.uploadSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.uploadInfo {
+  p {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.fileMeta {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.fileDate,
+.fileSize {
+  font-size: 12px;
+  color: #666;
+}
+
+.fileActions {
+  display: flex;
+  gap: 8px;
+}
+
+.removeButton {
+  padding: 8px;
+  border: none;
+  background: #ff4757;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #ff3742;
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.badge {
+  background: #667eea;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.uploadButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.primaryButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #5a6fd8;
+  }
+}
+
+// Добавьте эти стили в ваш существующий файл Profile.module.scss
+
+.uploadSection {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.cameraButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.emptyStateHeader {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cameraButtonLarge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+}
+
+.primaryButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f8f9fa;
+  color: #333;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+  }
+}
+
+// Адаптивность для мобильных устройств
+@media (max-width: 768px) {
+  .uploadSection {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .cameraButton, .uploadButton {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .emptyStateActions {
+    flex-direction: column;
+  }
+  
+  .cameraButtonLarge, .primaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.cameraSection {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.cameraButtonLarge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+}
