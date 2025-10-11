@@ -276,6 +276,7 @@ export default function FaceScanner() {
             <div className={styles.spinner}></div>
             <h3>Проверка фотографии...</h3>
             <p>Ищем лицо на изображении</p>
+            <p className={styles.subtitle1}>Примечание: качество фотографии влияет на качество показателей</p>
           </div>
         </div>
       );
@@ -312,6 +313,7 @@ export default function FaceScanner() {
             <div className={styles.successIcon}>✓</div>
             <h3>Лицо обнаружено!</h3>
             <p>Переходим к заполнению анкеты...</p>
+            <p className={styles.subtitle1}>Примечание: качество фотографии влияет на качество показателей</p>
           </div>
         </div>
       );
