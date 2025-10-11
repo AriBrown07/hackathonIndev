@@ -10,6 +10,7 @@ import Profile from '../pages/Profile/Profile';
 import ProtectedRoute from '../pages/Authorization/components/ProtectedRoute';
 import NotFoundPage from '../pages/NotFoundPage/NotFoundPage';
 import Ticket from '../pages/Ticket/Ticket';
+import MedicalExamination from '../pages/medicalExamination/MedicalExamination';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -48,6 +49,14 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/medicalExamination" 
+        element={
+          <ProtectedRoute>
+            <MedicalExamination />
           </ProtectedRoute>
         } 
       />
