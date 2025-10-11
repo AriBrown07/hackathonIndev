@@ -268,6 +268,34 @@
   }
 }
 
+.flexRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flexRow h4 {
+  margin: 0;
+}
+
+.conclusionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.conclusionHeader h3 {
+  margin: 0;
+}
+.guidanceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guidanceTitle {
+  margin: 0;
+}
 .metricList {
   display: flex;
   flex-direction: column;
@@ -293,7 +321,33 @@
     text-align: right;
   }
 }
+.positiveAspect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 
+.aspectsList {
+  line-height: 1.2;
+}
+
+.improvementArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.positiveAspect span {
+  line-height: 1.4;
+}
+
+.aspectsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .metricBar {
   flex: 2;
   height: 8px;
@@ -381,12 +435,7 @@
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 
-  h4 {
-    margin: 0;
-    color: #1e293b;
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
+
 
   svg {
     flex-shrink: 0;
@@ -674,5 +723,51 @@
 
   &:hover {
     background: #2563eb;
+  }
+}
+
+
+
+@media (max-width: 768px) {
+  .recommendationItem,
+  .warningItem {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+    gap: 0.75rem;
+  }
+  
+  .overallScore {
+    min-width: 250px;
+    padding: 1.5rem;
+  }
+  
+  .scoreCircle {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .scoreValue {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .recommendationItem,
+  .warningItem {
+    font-size: 0.8rem;
+  }
+  
+  .overallScore {
+    min-width: 220px;
+    padding: 1rem;
+  }
+  
+  .scoreCircle {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .scoreValue {
+    font-size: 1.8rem;
   }
 }
