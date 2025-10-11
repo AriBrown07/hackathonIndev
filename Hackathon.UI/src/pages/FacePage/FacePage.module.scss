@@ -126,8 +126,8 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   margin: 0 auto;
-  margin-top: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.8);
+  margin-top: -30px;
 }
 
 .cameraTitle {
@@ -924,7 +924,7 @@
   }
 
   .cameraSection {
-    width: 100%;
+    width: 80%;
     padding: 28px;
     max-width: 100%;
     margin-top: 1rem;
@@ -1010,6 +1010,7 @@
   }
 
   .cameraSection {
+    width: 85%;
     padding: 20px;
     border-radius: 12px;
   }

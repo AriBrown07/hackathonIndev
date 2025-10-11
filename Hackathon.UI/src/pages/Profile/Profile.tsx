@@ -18,6 +18,7 @@ export default function Profile() {
     // TODO: Реализовать загрузку файлов
     console.log(`Загрузка ${type} файла`);
   };
+   
 
   // Функция для генерации HTML контента талона
   const generateTicketHTML = (ticket: any) => {

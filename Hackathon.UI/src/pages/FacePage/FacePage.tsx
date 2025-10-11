@@ -328,19 +328,19 @@ export default function FaceScanner() {
           </div>
         )}
 
-        {photo && faceDetectionStatus && (
-          <div className={styles.scanningSection}>
-            <div className={styles.photoWrapper}>
-              <img src={photo} alt="Captured" className={styles.photo} />
-              {faceDetectionStatus === 'checking' && (
-                <div className={styles.scanAnimation}>
-                  <div className={styles.scanLine}></div>
-                </div>
-              )}
-            </div>
-            <FaceDetectionStatusComponent />
-          </div>
-        )}
+    {photo && faceDetectionStatus && !showResult && (
+  <div className={styles.scanningSection}>
+    <div className={styles.photoWrapper}>
+      <img src={photo} alt="Captured" className={styles.photo} />
+      {faceDetectionStatus === 'checking' && (
+        <div className={styles.scanAnimation}>
+          <div className={styles.scanLine}></div>
+        </div>
+      )}
+    </div>
+    <FaceDetectionStatusComponent />
+  </div>
+)}
 
         {showResult && photo && questionnaireData && (
           <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>

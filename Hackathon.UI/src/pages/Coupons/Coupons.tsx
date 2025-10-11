@@ -3,6 +3,7 @@ import { Calendar, MapPin, Clock, User, Mail, CheckCircle, X, ChevronLeft, Chevr
 import { useAuth } from '../../hooks/useAuth';
 import { useTickets } from '../../hooks/useTickets';
 import styles from './Coupons.module.scss';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Типы данных
 interface Clinic {
@@ -160,6 +161,7 @@ export default function Coupons() {
   });
   const [isBooked, setIsBooked] = useState(false);
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+    const navigate = useNavigate();
 
   // Получение уникальных специальностей
   const specialties = useMemo(() => {
@@ -351,6 +353,13 @@ export default function Coupons() {
 
   return (
     <div className={styles.container}>
+          <button 
+        className={styles.accountButton}
+        onClick={() => navigate('/profile')}
+        title="Перейти в профиль"
+      >
+        <User size={20} />
+      </button>
       <div className={styles.header}>
         <h1 className={styles.title}>Запись на прием</h1>
         <p className={styles.subtitle}>
@@ -360,41 +369,45 @@ export default function Coupons() {
 
       {/* Фильтры */}
       <div className={styles.filters}>
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Специальность:</label>
-          <select
-            className={styles.filterSelect}
-            value={selectedSpecialty}
-            onChange={(e) => setSelectedSpecialty(e.target.value)}
-          >
-            {specialties.map(specialty => (
-              <option key={specialty} value={specialty}>
-                {specialty === 'all' ? 'Все специальности' : specialty}
-              </option>
-            ))}
-          </select>
-        </div>
+  <div className={styles.filterGroup}>
+    <label className={styles.filterLabel}>Специальность:</label>
+    <select
+      className={styles.filterSelect}
+      value={selectedSpecialty}
+      onChange={(e) => setSelectedSpecialty(e.target.value)}
+    >
+      {specialties.map(specialty => (
+        <option key={specialty} value={specialty}>
+          {specialty === 'all' ? 'Все специальности' : specialty}
+        </option>
+      ))}
+    </select>
+  </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Дата приема:</label>
-          <select
-            className={styles.filterSelect}
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          >
-            <option value="">Любая дата</option>
-            {availableDates.map(date => (
-              <option key={date} value={date}>
-                {formatDate(date)}
-              </option>
-            ))}
-          </select>
-        </div>
+  <div className={styles.filterGroup}>
+    <label className={styles.filterLabel}>Дата приема:</label>
+    <select
+      className={styles.filterSelect}
+      value={selectedDate}
+      onChange={(e) => setSelectedDate(e.target.value)}
+    >
+      <option value="">Любая дата</option>
+      {availableDates.map(date => (
+        <option key={date} value={date}>
+          {formatDate(date)}
+        </option>
+      ))}
+    </select>
+  </div>
 
-        <button className={styles.resetButton} onClick={handleResetFilters}>
-          Сбросить фильтры
-        </button>
-      </div>
+  <Link to="/medicalExamination" className={styles.examButton}>
+    Пройти профосмотр
+  </Link>
+
+  <button className={styles.resetButton} onClick={handleResetFilters}>
+    Сбросить фильтры
+  </button>
+</div>
 
       {/* Навигация по неделям */}
       <div className={styles.weekNavigation}>

@@ -376,6 +376,14 @@
 
 // Адаптивность
 @media (max-width: 768px) {
+
+    .sidebar {
+    width: 100%;         
+    max-width: 100vw;   
+    padding: 16px;
+    box-sizing: border-box; 
+  }
+  
   .ticketHeader {
     flex-direction: column;
     gap: 12px;
@@ -394,3 +402,4 @@
     }
   }
 }
+
