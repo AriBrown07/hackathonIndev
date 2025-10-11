@@ -31,7 +31,7 @@ export interface BookingFormData {
 export interface HealthQuestionnaire {
   id?: string;
   userId?: string;
-  userEmail: string;
+  userName: string;
   age: number;
   gender: string;
   hasChronicDiseases: boolean;

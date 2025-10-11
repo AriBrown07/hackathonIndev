@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mui/material": "^7.3.4",
+    "@vladmandic/face-api": "^1.7.15",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.3",
-    "@mui/material": "^7.3.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-to-print": "^3.1.1"
