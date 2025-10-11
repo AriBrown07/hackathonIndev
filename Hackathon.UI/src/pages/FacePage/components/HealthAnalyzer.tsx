@@ -756,10 +756,10 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         category: 'Осанка и мышечное напряжение',
         priority: facial.facialTension.overall > 70 ? 'high' : 'medium',
         actions: [
-          'Ежедневная гимнастика для лица по 5-7 минут утром и вечером',
-          'Самомассаж височно-нижнечелюстного сустава круговыми движениями',
-          'Контроль положения головы при работе за компьютером',
-          'Растяжка мышц шеи с наклонами головы в разные стороны'
+          '• Ежедневная гимнастика для лица по 5-7 минут утром и вечером',
+          '• Самомассаж височно-нижнечелюстного сустава круговыми движениями',
+          '• Контроль положения головы при работе за компьютером',
+          '• Растяжка мышц шеи с наклонами головы в разные стороны'
         ],
         exercises: [
           'Упражнение "Лев": широко откройте рот и высуньте язык, напрягая все мышцы лица, затем расслабьтесь. Повторите 5 раз.',
@@ -1163,48 +1163,43 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
           <h3>Детальное заключение о состоянии здоровья</h3>
         </div>
         
-        <div className={styles.executiveSummary}>
-          <div className={styles.summaryIcon}>
-            <TrendingUp size={24} />
-          </div>
-          <div className={styles.summaryContent}>
-            <h4>Ключевые выводы</h4>
-            <p>{analysisResult.detailedConclusion.executiveSummary}</p>
-          </div>
-        </div>
+    <div className={styles.executiveSummary}>
+  <div className={styles.flexRow}>
+    <TrendingUp size={24} />
+    <h4>Ключевые выводы</h4>
+  </div>
+  <p>{analysisResult.detailedConclusion.executiveSummary}</p>
+</div>
 
         <div className={styles.conclusionGrid}>
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>
-              <Brain size={20} />
-            </div>
             <h4>Здоровье лица и осанка</h4>
             <p>{analysisResult.detailedConclusion.facialHealth}</p>
           </div>
 
-          <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>
-              <Shield size={20} />
-            </div>
-            <h4>Состояние кожи</h4>
-            <p>{analysisResult.detailedConclusion.skinAssessment}</p>
-          </div>
+        <div className={styles.conclusionSection}>
+  <div className={styles.flexRow}>
+    <Shield size={20} />
+    <h4>Состояние кожи</h4>
+  </div>
+  <p>{analysisResult.detailedConclusion.skinAssessment}</p>
+</div>
 
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>
-              <Activity size={20} />
-            </div>
-            <h4>Уровень стресса</h4>
-            <p>{analysisResult.detailedConclusion.stressEvaluation}</p>
-          </div>
+  <div className={styles.flexRow}>
+    <Activity size={20} />
+    <h4>Уровень стресса</h4>
+  </div>
+  <p>{analysisResult.detailedConclusion.stressEvaluation}</p>
+</div>
 
           <div className={styles.conclusionSection}>
-            <div className={styles.sectionIcon}>
-              <Zap size={20} />
-            </div>
-            <h4>Влияние образа жизни</h4>
-            <p>{analysisResult.detailedConclusion.lifestyleImpact}</p>
-          </div>
+  <div className={styles.sectionHeader}>
+    <Zap size={20} />
+    <h4>Влияние образа жизни</h4>
+  </div>
+  <p>{analysisResult.detailedConclusion.lifestyleImpact}</p>
+</div>
         </div>
 
         {/* Положительные аспекты и области улучшения */}
@@ -1216,19 +1211,18 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
             </div>
             <div className={styles.aspectsList}>
               {analysisResult.detailedConclusion.positiveAspects.map((aspect, index) => (
-                <div key={index} className={styles.positiveAspect}>
-                  <div className={styles.aspectBullet}>
-                    <ArrowRight size={14} />
-                  </div>
-                  <span>{aspect}</span>
-                </div>
+              <div key={index} className={styles.positiveAspect}>
+  <div className={styles.aspectBullet}>
+    <ArrowRight size={14} />
+  </div>
+  <span>{aspect}</span>
+</div>
               ))}
             </div>
           </div>
 
           <div className={styles.improvementAreas}>
             <div className={styles.aspectsHeader}>
-              <AlertCircle size={20} />
               <h4>Области для улучшения</h4>
             </div>
             <div className={styles.aspectsList}>
@@ -1243,10 +1237,12 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
         </div>
 
         <div className={styles.preventiveSection}>
-          <div className={styles.sectionIcon}>
-            <Shield size={20} />
-          </div>
-          <h4>Профилактические меры</h4>
+       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <div className={styles.sectionIcon}>
+    <Shield size={20} />
+  </div>
+  <h4>Профилактические меры</h4>
+</div>
           <p>{analysisResult.detailedConclusion.preventiveMeasures}</p>
         </div>
       </div>
@@ -1254,13 +1250,8 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
       {/* Рекомендации по врачам */}
       {analysisResult.doctorRecommendations && analysisResult.doctorRecommendations.length > 0 && (
         <div className={styles.doctorRecommendations}>
-          <div className={styles.sectionHeader}>
-            <Stethoscope size={24} />
-            <h3>Рекомендации по медицинским консультациям</h3>
-          </div>
           
           <div className={styles.medicalNotice}>
-            <AlertCircle size={20} />
             <div className={styles.noticeContent}>
               <h4>Важная информация</h4>
               <p>
@@ -1272,15 +1263,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
           </div>
 
           <div className={styles.doctorTable}>
-            <div className={styles.tableHeader}>
-              <div className={styles.tableCell}>Специалист</div>
-              <div className={styles.tableCell}>Приоритет</div>
-              <div className={styles.tableCell}>Причина обращения</div>
-              <div className={styles.tableCell}>Рекомендуемые обследования</div>
-              <div className={styles.tableCell}>Частота посещения</div>
-              <div className={styles.tableCell}>Срок обращения</div>
-            </div>
-            
+
             {analysisResult.doctorRecommendations
               .sort((a, b) => {
                 const priorityOrder = { high: 0, medium: 1, low: 2 };
@@ -1315,39 +1298,38 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
           <div className={styles.medicalGuidance}>
             <h4>Как подготовиться к визиту к врачу:</h4>
             <div className={styles.guidanceList}>
-              <div className={styles.guidanceItem}>
-                <div className={styles.guidanceNumber}>1</div>
-                <div className={styles.guidanceContent}>
-                  <strong>Соберите медицинскую документацию</strong>
-                  <p>Результаты предыдущих анализов, выписки из медицинских карт, список принимаемых препаратов</p>
+             <div className={styles.guidanceItem}>
+                <div className={styles.guidanceRow}>
+                  <div className={styles.guidanceNumber}>1</div>
+                  <strong className={styles.guidanceTitle}>Соберите медицинскую документацию</strong>
                 </div>
+                <p className={styles.guidanceText}>Результаты предыдущих анализов, выписки из медицинских карт, список принимаемых препаратов</p>
               </div>
-              <div className={styles.guidanceItem}>
-                <div className={styles.guidanceNumber}>2</div>
-                <div className={styles.guidanceContent}>
+             <div className={styles.guidanceItem}>
+                <div className={styles.guidanceRow}>
+                  <div className={styles.guidanceNumber}>2</div>
                   <strong>Составьте список вопросов</strong>
-                  <p>Запишите все симптомы, которые вас беспокоят, и вопросы, которые хотите задать врачу</p>
                 </div>
+                <p>Запишите все симптомы, которые вас беспокоят, и вопросы, которые хотите задать врачу</p>
               </div>
-              <div className={styles.guidanceItem}>
+           <div className={styles.guidanceItem}>
+              <div className={styles.guidanceRow}>
                 <div className={styles.guidanceNumber}>3</div>
-                <div className={styles.guidanceContent}>
-                  <strong>Ведите дневник наблюдений</strong>
-                  <p>Отмечайте изменения в состоянии здоровья, особенности питания и режима дня</p>
-                </div>
+                <strong>Ведите дневник наблюдений</strong>
               </div>
+              <p>Отмечайте изменения в состоянии здоровья, особенности питания и режима дня</p>
+            </div>
               <div className={styles.guidanceItem}>
-                <div className={styles.guidanceNumber}>4</div>
-                <div className={styles.guidanceContent}>
+                <div className={styles.guidanceRow}>
+                  <div className={styles.guidanceNumber}>4</div>
                   <strong>Подготовьтесь к обследованию</strong>
-                  <p>Уточните требования к подготовке для конкретных анализов и исследований</p>
                 </div>
+                <p>Уточните требования к подготовке для конкретных анализов и исследований</p>
               </div>
             </div>
           </div>
 
           <div className={styles.emergencyNotice}>
-            <AlertCircle size={24} />
             <div className={styles.emergencyContent}>
               <h5>Когда требуется срочная медицинская помощь:</h5>
               <ul>
@@ -1387,7 +1369,6 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
                   <div className={styles.actionsList}>
                     {rec.actions.map((action, actionIndex) => (
                       <div key={actionIndex} className={styles.actionItem}>
-                        <div className={styles.actionBullet}>•</div>
                         <span>{action}</span>
                       </div>
                     ))}
@@ -1397,19 +1378,18 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
                 {rec.exercises && rec.exercises.length > 0 && (
                   <div className={styles.exercisesSection}>
                     <h6>Практические упражнения:</h6>
-                    <div className={styles.exercisesList}>
-                      {rec.exercises.map((exercise, exerciseIndex) => (
-                        <div key={exerciseIndex} className={styles.exerciseItem}>
-                          <div className={styles.exerciseNumber}>{exerciseIndex + 1}</div>
-                          <span>{exercise}</span>
-                        </div>
-                      ))}
-                    </div>
+                   <div className={styles.exercisesList}>
+                    {rec.exercises.map((exercise, exerciseIndex) => (
+                      <div key={exerciseIndex} className={styles.exerciseRow}>
+                        <div className={styles.exerciseNumber}>{exerciseIndex + 1}</div>
+                        <span>{exercise}</span>
+                      </div>
+                    ))}
+                  </div>
                   </div>
                 )}
 
                 <div className={styles.timeline}>
-                  <Clock size={14} />
                   <span>Рекомендуемый срок выполнения: {rec.timeline}</span>
                 </div>
               </div>
