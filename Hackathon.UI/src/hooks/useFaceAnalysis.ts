@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { FilesetResolver, FaceDetector, FaceLandmarker } from '@mediapipe/tasks-vision';
+import { useEffect, useState, useRef } from 'react';
+import * as faceapi from '@vladmandic/face-api';
 
 export interface FaceAnalysisResult {
   detected: boolean;
@@ -22,10 +22,9 @@ export interface FaceAnalysisResult {
 }
 
 export const useFaceAnalysis = () => {
-  const [faceDetector, setFaceDetector] = useState<FaceDetector | null>(null);
-  const [faceLandmarker, setFaceLandmarker] = useState<FaceLandmarker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const modelsLoaded = useRef(false);
 
   useEffect(() => {
     initializeModels();
@@ -33,87 +32,87 @@ export const useFaceAnalysis = () => {
 
   const initializeModels = async () => {
     try {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-      );
+      if (modelsLoaded.current) return;
 
-      // Face Detection
-      const detector = await FaceDetector.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
-          delegate: "GPU"
-        },
-        runningMode: "IMAGE" as const,
-        minDetectionConfidence: 0.5
-      });
-
-      // Face Landmarker (Face Mesh)
-      const landmarker = await FaceLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU"
-        },
-        runningMode: "IMAGE" as const,
-        numFaces: 1,
-        minFaceDetectionConfidence: 0.5,
-        minFacePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-        outputFaceBlendshapes: true,
-        outputFacialTransformationMatrixes: true
-      });
-
-      setFaceDetector(detector);
-      setFaceLandmarker(landmarker);
+      console.log('⏳ Загрузка моделей face-api.js...');
+      
+      // Используем модели из CDN вместо локальных файлов
+      const modelPath = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      
+      await faceapi.nets.tinyFaceDetector.loadFromUri(modelPath);
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri(modelPath);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(modelPath);
+      
+      modelsLoaded.current = true;
       setIsLoading(false);
+      console.log('✅ Модели face-api.js успешно загружены');
     } catch (err) {
-      console.error('Error initializing MediaPipe models:', err);
-      setError('Не удалось загрузить модели анализа лица');
-      setIsLoading(false);
+      console.error('❌ Ошибка загрузки моделей face-api.js:', err);
+      
+      // Попробуем альтернативный CDN
+      try {
+        console.log('🔄 Попытка загрузки с альтернативного CDN...');
+        const altModelPath = 'https://unpkg.com/@vladmandic/face-api/model/';
+        
+        await faceapi.nets.tinyFaceDetector.loadFromUri(altModelPath);
+        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(altModelPath);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(altModelPath);
+        
+        modelsLoaded.current = true;
+        setIsLoading(false);
+        console.log('✅ Модели успешно загружены с альтернативного CDN');
+      } catch (fallbackErr) {
+        console.error('❌ Ошибка загрузки с альтернативного CDN:', fallbackErr);
+        setError('Не удалось загрузить модели анализа лица. Проверьте подключение к интернету.');
+        setIsLoading(false);
+      }
     }
   };
 
+  // Остальные функции остаются без изменений
   const analyzeImage = async (image: HTMLImageElement): Promise<FaceAnalysisResult> => {
-    if (!faceDetector || !faceLandmarker) {
+    if (!modelsLoaded.current) {
       throw new Error('Модели не загружены');
     }
 
     try {
-      // Создаем canvas для анализа
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Не удалось создать контекст canvas');
-      
-      canvas.width = image.width;
-      canvas.height = image.height;
-      ctx.drawImage(image, 0, 0);
+      const detectionOptions = new faceapi.TinyFaceDetectorOptions({
+        inputSize: 512,
+        scoreThreshold: 0.3
+      });
 
-      // Запускаем обе модели
-      const detectionResult = faceDetector.detect(image);
-      const landmarkResult = faceLandmarker.detect(image);
+      const detections = await faceapi
+        .detectAllFaces(image, detectionOptions)
+        .withFaceLandmarks(true)
+        .withFaceDescriptors();
 
-      return processResults(detectionResult, landmarkResult, image.width, image.height);
+      if (!detections || detections.length === 0) {
+        return {
+          detected: false,
+          faceCount: 0,
+          symmetry: 0,
+          eyeAspectRatio: 0,
+          mouthOpenness: 0,
+          headPose: { pitch: 0, yaw: 0, roll: 0 }
+        };
+      }
+
+      const detection = detections[0];
+      return processFaceDetection(detection, image.width, image.height);
     } catch (err) {
       console.error('Error during face analysis:', err);
       throw new Error('Ошибка при анализе изображения');
     }
   };
 
-  const processResults = (detectionResult: any, landmarkResult: any, width: number, height: number): FaceAnalysisResult => {
-    if (!detectionResult.detections || detectionResult.detections.length === 0) {
-      return {
-        detected: false,
-        faceCount: 0,
-        symmetry: 0,
-        eyeAspectRatio: 0,
-        mouthOpenness: 0,
-        headPose: { pitch: 0, yaw: 0, roll: 0 }
-      };
-    }
+  const processFaceDetection = (
+    detection: faceapi.WithFaceLandmarks<{ detection: faceapi.FaceDetection }, faceapi.FaceLandmarks68>,
+    width: number,
+    height: number
+  ): FaceAnalysisResult => {
+    const landmarks = detection.landmarks;
+    const box = detection.detection.box;
 
-    const detection = detectionResult.detections[0];
-    const landmarks = landmarkResult.faceLandmarks?.[0] || [];
-
-    // Расчет метрик
     const symmetry = calculateSymmetry(landmarks);
     const eyeAspectRatio = calculateEyeAspectRatio(landmarks);
     const mouthOpenness = calculateMouthOpenness(landmarks);
@@ -121,14 +120,14 @@ export const useFaceAnalysis = () => {
 
     return {
       detected: true,
-      faceCount: detectionResult.detections.length,
+      faceCount: 1,
       boundingBox: {
-        x: detection.boundingBox.originX,
-        y: detection.boundingBox.originY,
-        width: detection.boundingBox.width,
-        height: detection.boundingBox.height
+        x: box.x,
+        y: box.y,
+        width: box.width,
+        height: box.height
       },
-      landmarks,
+      landmarks: landmarks.positions,
       symmetry,
       eyeAspectRatio,
       mouthOpenness,
@@ -136,59 +135,52 @@ export const useFaceAnalysis = () => {
     };
   };
 
-  const calculateSymmetry = (landmarks: any[]): number => {
-    if (!landmarks || landmarks.length === 0) return 0;
-
-    // Ключевые точки для симметрии
-    const leftCheek = 234;
-    const rightCheek = 454;
-    const leftEye = 33;
-    const rightEye = 263;
-    const leftMouth = 61;
-    const rightMouth = 291;
-
-    const symmetryPoints = [
-      [leftCheek, rightCheek],
-      [leftEye, rightEye],
-      [leftMouth, rightMouth]
-    ];
+  const calculateSymmetry = (landmarks: faceapi.FaceLandmarks68): number => {
+    const positions = landmarks.positions;
+    
+    const leftCheek = positions[1];
+    const rightCheek = positions[15];
+    const leftEyeOuter = positions[36];
+    const rightEyeOuter = positions[45];
+    const leftMouth = positions[48];
+    const rightMouth = positions[54];
 
     let totalDiff = 0;
     let validPoints = 0;
 
-    symmetryPoints.forEach(([leftIdx, rightIdx]) => {
-      const leftPoint = landmarks[leftIdx];
-      const rightPoint = landmarks[rightIdx];
-      
-      if (leftPoint && rightPoint) {
-        const diff = Math.sqrt(
-          Math.pow(leftPoint.x - (1 - rightPoint.x), 2) +
-          Math.pow(leftPoint.y - rightPoint.y, 2)
-        );
-        totalDiff += diff;
-        validPoints++;
-      }
+    const symmetryPoints = [
+      [leftCheek, rightCheek],
+      [leftEyeOuter, rightEyeOuter],
+      [leftMouth, rightMouth]
+    ];
+
+    symmetryPoints.forEach(([leftPoint, rightPoint]) => {
+      const mirroredRightX = 1 - rightPoint.x;
+      const diff = Math.sqrt(
+        Math.pow(leftPoint.x - mirroredRightX, 2) +
+        Math.pow(leftPoint.y - rightPoint.y, 2)
+      );
+      totalDiff += diff;
+      validPoints++;
     });
 
     if (validPoints === 0) return 0;
 
     const avgDiff = totalDiff / validPoints;
-    const symmetry = Math.max(0, 100 - avgDiff * 200);
-    return Math.round(symmetry);
+    const symmetry = Math.max(0, 100 - avgDiff * 500);
+    return Math.round(Math.min(100, symmetry));
   };
 
-  const calculateEyeAspectRatio = (landmarks: any[]): number => {
-    if (!landmarks || landmarks.length < 478) return 0;
+  const calculateEyeAspectRatio = (landmarks: faceapi.FaceLandmarks68): number => {
+    const positions = landmarks.positions;
+    
+    const leftEye = [36, 37, 38, 39, 40, 41];
+    const rightEye = [42, 43, 44, 45, 46, 47];
 
-    // Индексы для левого глаза
-    const leftEye = [33, 160, 158, 133, 153, 144];
-    // Индексы для правого глаза  
-    const rightEye = [362, 385, 387, 263, 373, 380];
-
-    const calculateEAR = (eyePoints: number[]) => {
-      const A = distance(landmarks[eyePoints[1]], landmarks[eyePoints[5]]);
-      const B = distance(landmarks[eyePoints[2]], landmarks[eyePoints[4]]);
-      const C = distance(landmarks[eyePoints[0]], landmarks[eyePoints[3]]);
+    const calculateEAR = (eyePoints: number[]): number => {
+      const A = distance(positions[eyePoints[1]], positions[eyePoints[5]]);
+      const B = distance(positions[eyePoints[2]], positions[eyePoints[4]]);
+      const C = distance(positions[eyePoints[0]], positions[eyePoints[3]]);
       
       return (A + B) / (2 * C);
     };
@@ -196,7 +188,8 @@ export const useFaceAnalysis = () => {
     const leftEAR = calculateEAR(leftEye);
     const rightEAR = calculateEAR(rightEye);
 
-    return (leftEAR + rightEAR) / 2;
+    const avgEAR = (leftEAR + rightEAR) / 2;
+    return Math.min(1, avgEAR * 3);
   };
 
   const distance = (point1: any, point2: any): number => {
@@ -206,39 +199,35 @@ export const useFaceAnalysis = () => {
     );
   };
 
-  const calculateMouthOpenness = (landmarks: any[]): number => {
-    if (!landmarks || landmarks.length < 478) return 0;
+  const calculateMouthOpenness = (landmarks: faceapi.FaceLandmarks68): number => {
+    const positions = landmarks.positions;
+    
+    const upperLip = positions[62];
+    const lowerLip = positions[66];
 
-    const upperLip = 13;
-    const lowerLip = 14;
-
-    if (!landmarks[upperLip] || !landmarks[lowerLip]) return 0;
-
-    const openness = Math.abs(landmarks[upperLip].y - landmarks[lowerLip].y);
-    return Math.min(openness * 150, 100); // Масштабируем для лучшей визуализации
+    const verticalDistance = Math.abs(upperLip.y - lowerLip.y);
+    const mouthWidth = distance(positions[48], positions[54]);
+    
+    const openness = verticalDistance / mouthWidth;
+    return Math.min(1, openness * 5);
   };
 
-  const estimateHeadPose = (landmarks: any[]): { pitch: number; yaw: number; roll: number } => {
-    if (!landmarks || landmarks.length < 478) return { pitch: 0, yaw: 0, roll: 0 };
-
-    const noseTip = 1;
-    const chin = 152;
-    const leftEye = 33;
-    const rightEye = 263;
-
-    if (!landmarks[noseTip] || !landmarks[chin] || !landmarks[leftEye] || !landmarks[rightEye]) {
-      return { pitch: 0, yaw: 0, roll: 0 };
-    }
-
-    // Упрощенная оценка позы головы
-    const pitch = (landmarks[noseTip].y - landmarks[chin].y) * 180;
-    const yaw = (landmarks[leftEye].x - landmarks[rightEye].x) * 90;
-    const roll = (landmarks[leftEye].y - landmarks[rightEye].y) * 90;
+  const estimateHeadPose = (landmarks: faceapi.FaceLandmarks68): { pitch: number; yaw: number; roll: number } => {
+    const positions = landmarks.positions;
+    
+    const noseTip = positions[30];
+    const chin = positions[8];
+    const leftEye = positions[36];
+    const rightEye = positions[45];
+    
+    const pitch = (noseTip.y - chin.y) * 200 - 50;
+    const yaw = (leftEye.x - rightEye.x) * 100;
+    const roll = (leftEye.y - rightEye.y) * 100;
 
     return {
-      pitch: Math.round(pitch),
-      yaw: Math.round(yaw),
-      roll: Math.round(roll)
+      pitch: Math.round(Math.max(-90, Math.min(90, pitch))),
+      yaw: Math.round(Math.max(-90, Math.min(90, yaw))),
+      roll: Math.round(Math.max(-90, Math.min(90, roll)))
     };
   };
 

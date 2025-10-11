@@ -48,7 +48,7 @@ export default function FaceScanner() {
     loadModels();
   }, []);
 
-  // === Работа с камерой ===
+  // === Работа с камерой (остается без изменений) ===
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -113,7 +113,7 @@ export default function FaceScanner() {
     reader.readAsDataURL(file);
   };
 
-  // === Анализ лица ===
+  // === Анализ лица с использованием face-api ===
   const detectFace = async (photoData: string): Promise<FaceDetectionResult> => {
     try {
       const img = await faceapi.fetchImage(photoData);
@@ -125,25 +125,47 @@ export default function FaceScanner() {
 
       const detectionPromise = (async () => {
         const detection = await faceapi
-          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.3 }))
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ 
+            scoreThreshold: 0.3,
+            inputSize: 512 
+          }))
           .withFaceLandmarks(true);
 
         if (!detection) {
           return { detected: false, eyeAspectRatio: 0, mouthOpenness: 0, symmetry: 0 };
         }
 
-        const leftEye = detection.landmarks.getLeftEye();
-        const rightEye = detection.landmarks.getRightEye();
-        const mouth = detection.landmarks.getMouth();
+        const landmarks = detection.landmarks;
+        const positions = landmarks.positions;
 
-        const eyeAspectRatio = calcEyeAspectRatio(leftEye, rightEye);
-        const mouthOpenness = calcMouthOpenness(mouth);
-        const symmetry = calcFaceSymmetry(detection.landmarks);
+        // Расчет Eye Aspect Ratio
+        const leftEye = [36, 37, 38, 39, 40, 41];
+        const rightEye = [42, 43, 44, 45, 46, 47];
+        
+        const calculateEAR = (eyePoints: number[]) => {
+          const A = distance(positions[eyePoints[1]], positions[eyePoints[5]]);
+          const B = distance(positions[eyePoints[2]], positions[eyePoints[4]]);
+          const C = distance(positions[eyePoints[0]], positions[eyePoints[3]]);
+          return (A + B) / (2 * C);
+        };
 
-        return { detected: true, eyeAspectRatio, mouthOpenness, symmetry };
+        const eyeAspectRatio = (calculateEAR(leftEye) + calculateEAR(rightEye)) / 2;
+
+        // Расчет открытости рта
+        const mouthOpenness = Math.abs(positions[62].y - positions[66].y) / 
+                             distance(positions[48], positions[54]);
+
+        // Расчет симметрии
+        const symmetry = calculateFaceSymmetry(landmarks);
+
+        return { 
+          detected: true, 
+          eyeAspectRatio: Math.min(1, eyeAspectRatio * 3),
+          mouthOpenness: Math.min(1, mouthOpenness * 5),
+          symmetry 
+        };
       })();
 
-      // Возвращаем то, что сработает раньше
       return await Promise.race([timeoutPromise, detectionPromise]);
     } catch (err) {
       console.error('Ошибка при анализе лица:', err);
@@ -151,24 +173,20 @@ export default function FaceScanner() {
     }
   };
 
-  const calcEyeAspectRatio = (leftEye: any[], rightEye: any[]) => {
-    const avgHeight = ((leftEye[1].y - leftEye[5].y) + (rightEye[1].y - rightEye[5].y)) / 2;
-    const avgWidth = ((leftEye[3].x - leftEye[0].x) + (rightEye[3].x - rightEye[0].x)) / 2;
-    return Number(((avgHeight / avgWidth) * 100).toFixed(2));
+  const distance = (point1: any, point2: any): number => {
+    return Math.sqrt(
+      Math.pow(point1.x - point2.x, 2) + 
+      Math.pow(point1.y - point2.y, 2)
+    );
   };
 
-  const calcMouthOpenness = (mouth: any[]) => {
-    const height = mouth[14].y - mouth[18].y;
-    const width = mouth[6].x - mouth[0].x;
-    return Number(((height / width) * 100).toFixed(2));
-  };
-
-  const calcFaceSymmetry = (landmarks: any) => {
-    const leftCheek = landmarks.positions[1];
-    const rightCheek = landmarks.positions[15];
-    const nose = landmarks.positions[33];
+  const calculateFaceSymmetry = (landmarks: faceapi.FaceLandmarks68): number => {
+    const positions = landmarks.positions;
+    const leftCheek = positions[1];
+    const rightCheek = positions[15];
+    const nose = positions[30];
     const midX = (leftCheek.x + rightCheek.x) / 2;
-    const symmetry = 100 - Math.abs(midX - nose.x);
+    const symmetry = 100 - Math.abs(midX - nose.x) * 200;
     return Math.max(0, Math.min(100, symmetry));
   };
 
@@ -229,7 +247,7 @@ export default function FaceScanner() {
     reset();
   };
 
-  // === UI блок статусов ===
+  // === UI блок статусов (остается без изменений) ===
   const FaceDetectionStatusComponent = () => {
     if (faceDetectionStatus === 'checking') {
       return (
