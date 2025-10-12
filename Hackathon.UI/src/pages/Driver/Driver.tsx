@@ -551,30 +551,26 @@ const DriverCommission: React.FC = () => {
       </div>
 
       <div className={styles.clinicsSection}>
-        <h3 className={styles.sectionTitle}>Выберите медицинский центр для прохождения комиссии:</h3>
         <div className={styles.clinicsGrid}>
-          {mockClinics.map(clinic => (
+          
             <div 
-              key={clinic.id} 
+              
               className={styles.clinicCard}
-              onClick={() => handleClinicSelect(clinic.id)}
             >
               <div className={styles.clinicHeader}>
-                <h4 className={styles.clinicName}>{clinic.name}</h4>
-                <div className={styles.clinicCity}>{clinic.city}</div>
+                <h4 className={styles.clinicName}>24-поликлиника поликлиника спецмедосмотров </h4>
+                <div className={styles.clinicCity}></div>
               </div>
               <div className={styles.clinicAddress}>
                 <MapPin size={16} />
-                <span>{clinic.address}</span>
+                <span> ул. Филимонова 53, Минск</span>
               </div>
               <div className={styles.clinicPrice}>
-                Стоимость: <strong> 50 BYN</strong>
+                Стоимость: <strong> 56 BYN</strong>
               </div>
-              <div className={styles.selectClinicButton}>
-                Выбрать этот центр
-              </div>
+              
             </div>
-          ))}
+          
         </div>
       </div>
     </div>

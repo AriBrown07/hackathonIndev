@@ -6,6 +6,8 @@ import styles from './MedicalExamination.module.scss';
 import { mockClinics, mockDoctors, mockAppointments } from '../../data/mockData';
 import type { Doctor, Appointment, BookingFormData } from '../../types';
 
+import YandexMapModal from '../../hooks/YandexMapModal';
+
 interface SelectedAppointment {
   appointment: Appointment;
   doctor: Doctor;
@@ -18,6 +20,7 @@ const MedicalExamination: React.FC = () => {
   const [isBooked, setIsBooked] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [currentStep, setCurrentStep] = useState<'clinic' | 'doctors' | 'booking'>('clinic');
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // Единый бесплатный профосмотр
   const examinationPackage = {
@@ -33,6 +36,23 @@ const MedicalExamination: React.FC = () => {
       'Заключение о состоянии здоровья'
     ]
   };
+
+  const handleOpenMap = useCallback(() => {
+    setIsMapModalOpen(true);
+  }, []);
+
+  // Функция для закрытия карты
+  const handleCloseMap = useCallback(() => {
+    setIsMapModalOpen(false);
+  }, []);
+
+  // Функция выбора клиники через карту
+  const handleClinicSelectFromMap = useCallback((clinicId: string) => {
+    setSelectedClinic(clinicId);
+    setSelectedAppointments([]);
+    setCurrentStep('doctors');
+    setIsMapModalOpen(false);
+  }, []);
 
   // Фильтрация врачей для профосмотра
   const examinationDoctors = useMemo(() => {
@@ -506,6 +526,13 @@ const MedicalExamination: React.FC = () => {
 
       <div className={styles.clinicsSection}>
         <h3 className={styles.sectionTitle}>Выберите поликлинику для прохождения осмотра:</h3>
+        <button 
+            className={styles.mapButton}
+            onClick={handleOpenMap}
+          >
+            <MapPin size={20} />
+            Выбрать на карте
+          </button>
         <div className={styles.clinicsGrid}>
           {mockClinics.map(clinic => (
             <div 
@@ -528,6 +555,12 @@ const MedicalExamination: React.FC = () => {
           ))}
         </div>
       </div>
+      <YandexMapModal
+        isOpen={isMapModalOpen}
+        onClose={handleCloseMap}
+        clinics={mockClinics}
+        onClinicSelect={handleClinicSelectFromMap}
+      />
     </div>
   );
 

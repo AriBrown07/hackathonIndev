@@ -983,3 +983,28 @@
         }
       }
     }
+
+    // В HealthAnalyzer.module.scss
+.healthReport {
+  // Основные стили компонента
+  
+  .pdfHide {
+    @media print {
+      display: none !important;
+    }
+  }
+}
+
+.saveButton {
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  
+  &:hover {
+    background: #0056b3;
+  }
+}

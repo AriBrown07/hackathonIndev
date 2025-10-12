@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { 
   Activity, 
   AlertCircle, 
@@ -20,6 +20,7 @@ interface HealthAnalyzerProps {
   photo: string;
   questionnaireData: HealthQuestionnaire;
   onAnalysisComplete: (result: HealthAnalysisResult) => void;
+  contentRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface HealthAnalysisResult {
@@ -170,7 +171,8 @@ export interface Recommendation {
 const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({ 
   photo, 
   questionnaireData, 
-  onAnalysisComplete
+  onAnalysisComplete,
+  contentRef: externalContentRef 
 }) => {
   const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -178,6 +180,9 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
   const [currentStep, setCurrentStep] = useState('');
   
   const { isLoading: modelsLoading, error: modelsError, analyzeImage } = useFaceAnalysis();
+
+  const internalContentRef = useRef<HTMLDivElement>(null);
+  const contentRef = externalContentRef || internalContentRef;
 
   useEffect(() => {
     if (!modelsLoading && !modelsError) {
@@ -937,7 +942,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
 
   if (loading) {
     return (
-      <div className={styles.loadingContainer}>
+      <div ref={contentRef} className={styles.loadingContainer}>
         <div className={styles.progressSection}>
           <h3>Расширенный анализ здоровья</h3>
           <div className={styles.progressBar}>
@@ -981,7 +986,7 @@ const HealthAnalyzer: React.FC<HealthAnalyzerProps> = ({
   }
 
   return (
-    <div className={styles.healthReport}>
+    <div ref={contentRef} className={styles.healthReport}>
       <div className={styles.overallScore}>
         <div className={styles.scoreCircle}>
           <div className={styles.scoreValue}>{analysisResult.overallScore}</div>

@@ -7,7 +7,8 @@ export const usePDFGenerator = () => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const generatePDF = useCallback(async (fileName: string = 'health-report') => {
-    if (!contentRef.current) {
+    const element = contentRef.current;
+    if (!element) {
       console.error('No content element found for PDF generation');
       return;
     }
@@ -17,46 +18,56 @@ export const usePDFGenerator = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
+      // Сохраняем оригинальные стили
+      const originalOverflow = element.style.overflow;
+      const originalHeight = element.style.height;
+      
+      // Устанавливаем стили для корректного рендеринга
+      element.style.overflow = 'visible';
+      element.style.height = 'auto';
+
       // Скрываем элементы, которые не должны попасть в PDF
-      const elementsToHide = contentRef.current.querySelectorAll('[data-pdf-hide]');
+      const elementsToHide = element.querySelectorAll('[data-pdf-hide]');
       const originalStyles: { [key: string]: string } = {};
       
-      elementsToHide.forEach(el => {
-        originalStyles[(el as HTMLElement).style.display] = (el as HTMLElement).style.display;
+      elementsToHide.forEach((el, index) => {
+        originalStyles[`element-${index}`] = (el as HTMLElement).style.display;
         (el as HTMLElement).style.display = 'none';
       });
 
-      // Создаем canvas из всего контента
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 1.5, // Уменьшаем scale для лучшей производительности
+    
+      const canvas = await html2canvas(element, {
+        scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         scrollY: -window.scrollY,
-        onclone: (clonedDoc, element) => {
-          // Улучшаем стили для печати
-          const clonedElement = element as HTMLElement;
-          clonedElement.style.padding = '20px';
-          clonedElement.style.backgroundColor = '#ffffff';
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        onclone: (clonedDoc, clonedElement) => {
           
-          // Увеличиваем контрастность для печати
-          const textElements = clonedElement.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div');
+          const clonedEl = clonedElement as HTMLElement;
+          clonedEl.style.padding = '20px';
+          clonedEl.style.backgroundColor = '#ffffff';
+          clonedEl.style.width = '100%';
+          clonedEl.style.height = 'auto';
+          
+          // Улучшаем контрастность для печати
+          const textElements = clonedEl.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li');
           textElements.forEach(el => {
-            const element = el as HTMLElement;
-            const computedStyle = window.getComputedStyle(element);
-            if (computedStyle.color.includes('rgb') && !computedStyle.color.includes('0, 0, 0')) {
-              element.style.color = '#000000';
-            }
-            if (computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-              element.style.backgroundColor = 'transparent';
-            }
+            const textEl = el as HTMLElement;
+            textEl.style.color = '#000000';
+            textEl.style.backgroundColor = 'transparent';
           });
         }
       });
 
-      // Восстанавливаем скрытые элементы
-      elementsToHide.forEach(el => {
-        (el as HTMLElement).style.display = originalStyles[(el as HTMLElement).style.display] || '';
+      // Восстанавливаем оригинальные стили
+      element.style.overflow = originalOverflow;
+      element.style.height = originalHeight;
+      
+      elementsToHide.forEach((el, index) => {
+        (el as HTMLElement).style.display = originalStyles[`element-${index}`] || '';
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -65,29 +76,31 @@ export const usePDFGenerator = () => {
       
       // Рассчитываем размеры для PDF
       const ratio = imgHeight / imgWidth;
-      let pdfWidth = pageWidth - 20; // Отступы по бокам
-      let pdfHeight = pdfWidth * ratio;
+      const pdfWidth = pageWidth - 20; // Отступы по бокам
+      const pdfHeight = pdfWidth * ratio;
       
       // Если контент помещается на одну страницу
       if (pdfHeight <= pageHeight) {
         pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
       } else {
-        // Если контент длинный, разбиваем на страницы
+        // Для длинного контента разбиваем на страницы
         let heightLeft = pdfHeight;
         let position = 0;
         const pageHeightWithMargin = pageHeight - 20;
         
-        while (heightLeft > 0) {
-          if (position > 0) {
-            pdf.addPage();
-          }
-          
-          // Вычисляем высоту для текущей страницы
-          const currentPageHeight = Math.min(pageHeightWithMargin, heightLeft);
-          
-          
-          
-          position += currentPageHeight / pdfWidth * imgWidth;
+        pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+        
+        while (heightLeft > pageHeightWithMargin) {
+          position += pageHeightWithMargin;
+          pdf.addPage();
+          pdf.addImage(
+            imgData, 
+            'PNG', 
+            10, 
+            -position / pdfWidth * pdfHeight + 10, 
+            pdfWidth, 
+            pdfHeight
+          );
           heightLeft -= pageHeightWithMargin;
         }
       }
@@ -101,7 +114,7 @@ export const usePDFGenerator = () => {
   }, []);
 
   return { 
-    contentRef: contentRef as React.RefObject<HTMLDivElement | null>, 
+    contentRef, 
     generatePDF 
   };
 };
