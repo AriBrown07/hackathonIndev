@@ -24,50 +24,38 @@ export const AppRoutes: React.FC = () => {
       <Route 
         path="/coupons" 
         element={
-          <ProtectedRoute>
             <Coupons />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/questionnaire" 
         element={
-          <ProtectedRoute>
             <Questionnaire />
-          </ProtectedRoute>
         } 
       />
        <Route 
         path="/ticket" 
         element={
-          <ProtectedRoute>
             <Ticket />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/profile" 
         element={
-          <ProtectedRoute>
             <Profile />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/medicalExamination" 
         element={
-          <ProtectedRoute>
             <MedicalExamination />
-          </ProtectedRoute>
         } 
       />
 
          <Route 
         path="/driver" 
         element={
-          <ProtectedRoute>
             <Driver />
-          </ProtectedRoute>
         } 
       />
       {/* Перенаправление с корня на главную страницу */}
