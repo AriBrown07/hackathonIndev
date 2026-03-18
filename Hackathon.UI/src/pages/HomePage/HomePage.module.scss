@@ -204,35 +204,51 @@
 }
 
 .disclaimer {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 20px;
-  padding: 2.5rem;
-  margin: 2rem 0;
+  padding: 1.75rem 2rem;
+  margin: 2rem 0 0.75rem;
   display: flex;
-  gap: 2rem;
-  animation: fadeInUp 1.2s ease;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  gap: 1.5rem;
+  align-items: flex-start;
+  box-shadow: 0 8px 32px rgba(80, 40, 160, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .disclaimerIcon {
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #F0FFF1 0%, #5603AD 100%);
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  box-shadow: 0 4px 16px rgba(120, 60, 200, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
   animation: pulse 2s ease infinite;
 
-  @media (max-width: 768px) {
-    margin: 0 auto;
+  &::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: -20%;
+    width: 60%;
+    height: 55%;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    filter: blur(6px);
+  }
+
+  svg {
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -241,28 +257,132 @@
 }
 
 .disclaimerTitle {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: #333;
-  margin-bottom: 0.75rem;
+  color: #fff;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
+  gap: 0.4rem;
+}
 
-  @media (max-width: 768px) {
-    justify-content: center;
-  }
+.exclBadge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
 }
 
 .disclaimerText {
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.7;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.65;
   text-align: justify;
 
   strong {
-    color: #f5576c;
+    color: #ffa3b5;
     font-weight: 700;
   }
+}
+
+.accordionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.75rem 0 2rem;
+}
+
+.accordionItem {
+  background: rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(80, 40, 160, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+
+  &.open {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 8px 32px rgba(80, 40, 160, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+}
+
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  gap: 1rem;
+}
+
+.accordionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.accordionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+
+.accordionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.accordionPlus {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.25s;
+
+  .open & {
+    transform: rotate(45deg);
+  }
+}
+
+.accordionBody {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease;
+
+  .open & {
+    max-height: 300px;
+    opacity: 1;
+  }
+}
+
+.accordionBodyInner {
+  margin: 0 1.5rem;
+  padding: 0.9rem 0 1.25rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.7;
 }
 
 .process {

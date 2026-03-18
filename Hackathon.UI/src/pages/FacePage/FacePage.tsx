@@ -351,11 +351,11 @@ const checkFaceDetection = async (photoData: string) => {
             <div className={styles.requirements}>
               <h4>Требования к фото:</h4>
               <ul>
-                <li>✓ Четкое изображение лица</li>
-                <li>✓ Хорошее освещение</li>
-                <li>✓ Лицо должно занимать большую часть кадра</li>
-                <li>✓ Прямой взгляд в камеру</li>
-                <li>✓ Отсутствие солнцезащитных очков</li>
+                <li>Четкое изображение лица</li>
+                <li>Хорошее освещение</li>
+                <li>Лицо должно занимать большую часть кадра</li>
+                <li>Прямой взгляд в камеру</li>
+                <li>Отсутствие солнцезащитных очков</li>
               </ul>
             </div>
             <button className={styles.retryButton} onClick={reset}>
@@ -440,7 +440,6 @@ const checkFaceDetection = async (photoData: string) => {
         {photo && isScanning && faceDetectionStatus && (
           <div className={styles.scanningSection}>
             <div className={styles.photoWrapper}>
-              <img src={photo} alt="Captured" className={styles.photo} />
               {faceDetectionStatus === 'checking' && (
                 <div className={styles.scanAnimation}>
                   <div className={styles.scanLine}></div>
@@ -471,46 +470,46 @@ const checkFaceDetection = async (photoData: string) => {
               </div>
             </div>
           
-          <div className={styles.rightPanel}>
-  <div className={styles.resultCard}>
-    <h2 className={styles.resultTitle}>Результат анализа</h2>
+            <div className={styles.rightPanel}>
+              <div className={styles.resultCard}>
+                <h2 className={styles.resultTitle}>Результат сканирования</h2>
 
-    <div className={styles.resultContent}>
-      <HealthAnalyzer
-        photo={photo}
-        questionnaireData={questionnaireData}
-        onAnalysisComplete={handleAnalysisComplete}
-      />
-    </div>
+                <div className={styles.resultContent}>
+                  <HealthAnalyzer
+                    photo={photo}
+                    questionnaireData={questionnaireData}
+                    onAnalysisComplete={handleAnalysisComplete}
+                  />
+                </div>
 
-    <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
-      Сохранить
-    </button>
+                <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
+                  Сохранить
+                </button>
 
-    {/* Модальное окно сохранения */}
-    {showSaveModal && (
-      <div className={styles.saveModal}>
-        <div
-          className={styles.saveOverlay}
-          onClick={() => setShowSaveModal(false)}
-        />
-        <div className={styles.saveContent}>
-          <h3>Сохранить результат</h3>
-          <div className={styles.saveActions}>
-            <button >Сохранить в аккаунт</button>
-            <button >Скачать PDF</button>
-          </div>
-          <button
-            className={styles.closeSaveModal}
-            onClick={() => setShowSaveModal(false)}
-          >
-            X
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+                {/* Модальное окно сохранения */}
+                {showSaveModal && (
+                  <div className={styles.saveModal}>
+                    <div
+                      className={styles.saveOverlay}
+                      onClick={() => setShowSaveModal(false)}
+                    />
+                    <div className={styles.saveContent}>
+                      <h3>Сохранить результат</h3>
+                      <div className={styles.saveActions}>
+                        <button >Сохранить в аккаунт</button>
+                        <button >Скачать PDF</button>
+                      </div>
+                      <button
+                        className={styles.closeSaveModal}
+                        onClick={() => setShowSaveModal(false)}
+                      >
+                        X
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
           </div>
         )}
