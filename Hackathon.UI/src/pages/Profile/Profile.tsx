@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTickets } from '../../hooks/useTickets';
-import { LogOut, User, FileText, Download, Upload, Settings, Printer, Eye } from 'lucide-react';
+import { useMedicalFiles } from '../../hooks/useMedicalFiles'; // Импортируем новый хук
+import { LogOut, User, FileText, Download, Upload, Settings, Printer, Eye, X, Camera } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from './Profile.module.scss';
@@ -10,16 +11,58 @@ import styles from './Profile.module.scss';
 export default function Profile() {
   const { user, signOut } = useAuth();
   const { tickets, removeTicket } = useTickets(user);
+  const { 
+    medicalFiles, 
+    isUploading, 
+    uploadFiles, 
+    removeMedicalFile, 
+    downloadFile 
+  } = useMedicalFiles(user); // Используем хук для медицинских файлов
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'medical' | 'tickets'>('medical');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (type: 'medical' | 'tickets') => {
-    // TODO: Реализовать загрузку файлов
-    console.log(`Загрузка ${type} файла`);
+  // Функция для загрузки файлов
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      await uploadFiles(files);
+    } catch (error) {
+      console.error('Ошибка при загрузке файлов:', error);
+      alert(error instanceof Error ? error.message : 'Произошла ошибка при загрузке файлов');
+    } finally {
+      // Очищаем input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
-  // Функция для генерации HTML контента талона
+  // Функция для форматирования размера файла
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Функция для форматирования даты
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  // Функция для генерации HTML контента талона (остается без изменений)
   const generateTicketHTML = (ticket: any) => {
     return `
       <!DOCTYPE html>
@@ -236,7 +279,7 @@ export default function Profile() {
     `;
   };
 
-  // Функция для создания PDF
+  // Функция для создания PDF (остается без изменений)
   const handleDownloadPDF = async (ticket: any) => {
     setIsGeneratingPDF(ticket.id);
     
@@ -299,7 +342,7 @@ export default function Profile() {
     }
   };
 
-  // Функция для печати
+  // Функция для печати (остается без изменений)
   const handlePrintTicket = (ticket: any) => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -311,12 +354,6 @@ export default function Profile() {
       };
     }
   };
-
-  // Заглушки для данных
-  const medicalReports = [
-    { id: 1, name: 'Заключение_от_15_10_2024.pdf', date: '15.10.2024' },
-    { id: 2, name: 'Анализы_результаты.pdf', date: '10.10.2024' },
-  ];
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -359,6 +396,9 @@ export default function Profile() {
           >
             <FileText size={20} />
             <span>Медицинские заключения</span>
+            {medicalFiles.length > 0 && (
+              <span className={styles.badge}>{medicalFiles.length}</span>
+            )}
           </button>
           <button
             className={`${styles.navButton} ${activeTab === 'tickets' ? styles.active : ''}`}
@@ -374,9 +414,9 @@ export default function Profile() {
             <FileText size={20} />
             <span>Запись на прием</span>
           </button>
-          <button className={styles.navButton}>
-            <Settings size={20} />
-            <span>Настройки</span>
+          <button className={styles.navButton} onClick={() => navigate('/main')}>
+            <Camera size={20} />
+            <span>Пройти фото-обследование</span>
           </button>
         </nav>
 
@@ -393,13 +433,24 @@ export default function Profile() {
             {activeTab === 'medical' ? 'Медицинские заключения' : 'Мои талоны'}
           </h1>
           {activeTab === 'medical' && (
-            <button
-              className={styles.uploadButton}
-              onClick={() => handleFileUpload(activeTab)}
-            >
-              <Upload size={20} />
-              Загрузить PDF
-            </button>
+            <div className={styles.uploadSection}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".pdf"
+                multiple
+                style={{ display: 'none' }}
+              />
+              <button
+                className={styles.uploadButton}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Upload size={20} />
+                {isUploading ? 'Загрузка...' : 'Загрузить PDF'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -407,28 +458,53 @@ export default function Profile() {
           {activeTab === 'medical' ? (
             // Медицинские заключения
             <>
-              {medicalReports.map((file) => (
+              {medicalFiles.map((file) => (
                 <div key={file.id} className={styles.fileCard}>
                   <div className={styles.fileIcon}>
                     <FileText size={32} />
                   </div>
                   <div className={styles.fileInfo}>
                     <h4 className={styles.fileName}>{file.name}</h4>
-                    <p className={styles.fileDate}>Добавлено: {file.date}</p>
+                    <div className={styles.fileMeta}>
+                      <span className={styles.fileDate}>
+                        Загружено: {formatDate(file.uploadDate)}
+                      </span>
+                      <span className={styles.fileSize}>
+                        Размер: {formatFileSize(file.size)}
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    className={styles.downloadButton}
-                    onClick={() => console.log('Download:', file.name)}
-                  >
-                    <Download size={20} />
-                  </button>
+                  <div className={styles.fileActions}>
+                    <button
+                      className={styles.downloadButton}
+                      onClick={() => downloadFile(file)}
+                      title="Скачать файл"
+                    >
+                      <Download size={20} />
+                    </button>
+                    <button
+                      className={styles.removeButton}
+                      onClick={() => removeMedicalFile(file.id)}
+                      title="Удалить файл"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
-              {medicalReports.length === 0 && (
+              
+              {medicalFiles.length === 0 && (
                 <div className={styles.emptyState}>
                   <FileText size={48} />
-                  <h3>Файлы не найдены</h3>
-                  <p>Загрузите ваш первый PDF-файл</p>
+                  <h3>Медицинские заключения не найдены</h3>
+                  <p>Загрузите ваш первый PDF-файл с медицинским заключением</p>
+                  <button
+                    className={styles.primaryButton}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={20} />
+                    Загрузить первый файл
+                  </button>
                 </div>
               )}
             </>

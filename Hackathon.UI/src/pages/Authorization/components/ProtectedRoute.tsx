@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -18,8 +18,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
-    return <Authorization onAuthSuccess={() => {}} />;
+  if (!isAuthenticated) {
+    return <Authorization onAuthSuccess={() => window.location.reload()} />;
   }
 
   return <>{children}</>;

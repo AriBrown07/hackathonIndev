@@ -145,7 +145,8 @@
 }
 
 .input {
-  width: 100%;
+  width: 90%;
+  max-width: 100%;
   padding: 0.875rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
@@ -157,7 +158,7 @@
     outline: none;
     border-color: #667eea;
     background: white;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
   }
 
@@ -297,6 +298,17 @@
       width: 24px;
       height: 24px;
     }
+  }
+
+    .input {
+    font-size: 0.9rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .submitButton {
+    font-size: 0.95rem;
+    padding: 0.85rem;
+    min-height: 48px; // чуть меньше, чтобы совпадала с полями
   }
 }
 

@@ -1,0 +1,210 @@
+// components/YandexMapModal.module.scss
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  color: #6b7280;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+}
+
+.mapContainer {
+  position: relative;
+  flex: 1;
+  min-height: 400px;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.errorMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #dc2626;
+  padding: 40px;
+  
+  p {
+    margin: 8px 0;
+  }
+}
+
+.loadingMessage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.balloon {
+  padding: 12px;
+  max-width: 250px;
+  
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 600;
+  }
+  
+  p {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+}
+
+.selectButton {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+  width: 100%;
+  
+  &:hover {
+    background: #5a6fd8;
+  }
+}
+
+.clinicsList {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  max-height: 300px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: #1f2937;
+    font-weight: 600;
+  }
+}
+
+.clinicListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #f9fafb;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.clinicListInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #1f2937;
+    font-weight: 600;
+  }
+  
+  span {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+}
+
+.pinIcon {
+  color: #ef4444;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.selectListButton {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  
+  &:hover {
+    background: #5a6fd8;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}

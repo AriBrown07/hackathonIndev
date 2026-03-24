@@ -36,6 +36,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -76,9 +77,11 @@
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -171,9 +174,12 @@
 }
 
 @keyframes shimmer {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(100%);
   }
@@ -268,6 +274,36 @@
   }
 }
 
+.flexRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flexRow h4 {
+  margin: 0;
+}
+
+.conclusionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.conclusionHeader h3 {
+  margin: 0;
+}
+
+.guidanceRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guidanceTitle {
+  margin: 0;
+}
+
 .metricList {
   display: flex;
   flex-direction: column;
@@ -292,6 +328,86 @@
     min-width: 50px;
     text-align: right;
   }
+}
+
+.positiveAspect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.aspectsList {
+  line-height: 1.2;
+}
+
+.improvementArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Убираем точки */
+.actionsList {
+  line-height: 1.2;
+}
+
+.actionItem {
+  margin-bottom: 4px;
+}
+
+.actionBullet {
+  display: none;
+}
+
+/* Цифры в одном ряду с текстом */
+.exerciseRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.exerciseNumber {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Адаптив для текста */
+.actionItem span,
+.exerciseRow span {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+
+  .actionItem span,
+  .exerciseRow span {
+    font-size: 0.85rem;
+  }
+}
+
+.timeline {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+@media (max-width: 768px) {
+  .timeline {
+    font-size: 0.8rem;
+  }
+}
+
+.positiveAspect span {
+  line-height: 1.4;
+}
+
+.aspectsHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .metricBar {
@@ -328,13 +444,17 @@
   font-size: 0.95rem;
 }
 
-.vitalSigns, .poseInfo, .physicalMetrics {
+.vitalSigns,
+.poseInfo,
+.physicalMetrics {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.vitalItem, .poseItem, .physicalItem {
+.vitalItem,
+.poseItem,
+.physicalItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -353,13 +473,16 @@
   }
 }
 
-.vitalValue, .poseValue, .physicalValue {
+.vitalValue,
+.poseValue,
+.physicalValue {
   font-weight: 700;
   color: #1e293b;
   font-size: 0.95rem;
 }
 
-.recommendations, .warnings {
+.recommendations,
+.warnings {
   margin-bottom: 1.5rem;
   padding: 1.5rem;
   border-radius: 16px;
@@ -368,7 +491,9 @@
 .recommendations {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
   border: 1px solid #bae6fd;
+
 }
+
 
 .warnings {
   background: linear-gradient(135deg, #fef2f2 0%, #ffe4e6 100%);
@@ -381,12 +506,7 @@
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 
-  h4 {
-    margin: 0;
-    color: #1e293b;
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
+
 
   svg {
     flex-shrink: 0;
@@ -401,7 +521,8 @@
   }
 }
 
-.recommendationList, .warningList {
+.recommendationList,
+.warningList {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -510,7 +631,8 @@
     font-size: 0.85rem;
   }
 
-  .recommendations, .warnings {
+  .recommendations,
+  .warnings {
     padding: 1.25rem;
   }
 }
@@ -580,7 +702,7 @@
   .errorIcon {
     position: relative;
     margin-bottom: 1.5rem;
-    
+
     .cameraIcon {
       position: absolute;
       bottom: -5px;
@@ -674,5 +796,215 @@
 
   &:hover {
     background: #2563eb;
+  }
+}
+
+
+@media (max-width: 768px) {
+
+  .recommendationItem,
+  .warningItem {
+    font-size: 0.85rem;
+    padding: 0.6rem;
+    gap: 0.75rem;
+  }
+
+  .recommendations {
+    padding: 1rem 0.75rem;
+  }
+
+  .recommendationItem {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .recommendationHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  .recommendationHeader h5 {
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .actionsSection,
+  .exercisesSection {
+    width: 100%;
+  }
+
+  .actionsList,
+  .exercisesList {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    width: 100%;
+  }
+
+  .actionItem,
+  .exerciseRow {
+    margin-bottom: 4px;
+    width: 100%;
+  }
+
+  .timeline {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    width: 100%;
+  }
+
+  .overallScore {
+    min-width: 250px;
+    padding: 1.5rem;
+  }
+
+  .scoreCircle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .scoreValue {
+    font-size: 2.2rem;
+  }
+
+  /* Добавляем всё в колонку */
+  .recommendationGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .recommendationItem,
+  .warningItem {
+    font-size: 0.8rem;
+  }
+
+  .recommendations {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .recommendationItem {
+    padding: 0.5rem;
+  }
+
+  .recommendationHeader h5 {
+    font-size: 0.9rem;
+  }
+
+  .actionsList,
+  .exercisesList {
+    font-size: 0.75rem;
+  }
+
+  .overallScore {
+    min-width: 220px;
+    padding: 1rem;
+  }
+
+  .scoreCircle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .scoreValue {
+    font-size: 1.8rem;
+  }
+
+}
+
+  /* Уже всё в колонке, просто уменьшаем отступы */
+  .recommendationGrid {
+    gap: 0.75rem;
+
+    .healthReport {
+      // Существующие стили...
+
+      // Оптимизации для PDF
+      background: white;
+      color: #333;
+      min-height: 100vh;
+
+      // Убедитесь, что все контенты видны
+      .metricCard,
+      .conclusionSection,
+      .recommendationItem {
+        border: 1px solid #ddd;
+        background: #fafafa;
+        break-inside: avoid;
+      }
+
+      // Улучшаем читаемость
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: #2c3e50 !important;
+      }
+
+      // Увеличиваем контрастность
+      .metricFill {
+        background: #3498db !important;
+      }
+
+      .progressFill {
+        background: #e74c3c !important;
+      }
+    }
+
+    // Скрываем элементы в PDF
+    [data-pdf-hide] {
+      // Эти элементы будут скрыты при генерации PDF
+    }
+  }
+
+    @media print {
+      .healthReport {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        // Убираем тени и градиенты для лучшей печати
+        .metricCard,
+        .conclusionSection {
+          box-shadow: none !important;
+          border: 1px solid #000 !important;
+        }
+      }
+    }
+
+    // В HealthAnalyzer.module.scss
+.healthReport {
+  // Основные стили компонента
+  
+  .pdfHide {
+    @media print {
+      display: none !important;
+    }
+  }
+}
+
+.saveButton {
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  
+  &:hover {
+    background: #0056b3;
   }
 }

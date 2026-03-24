@@ -11,6 +11,7 @@ import ProtectedRoute from '../pages/Authorization/components/ProtectedRoute';
 import NotFoundPage from '../pages/NotFoundPage/NotFoundPage';
 import Ticket from '../pages/Ticket/Ticket';
 import MedicalExamination from '../pages/medicalExamination/MedicalExamination';
+import Driver from '../pages/Driver/Driver';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -23,41 +24,38 @@ export const AppRoutes: React.FC = () => {
       <Route 
         path="/coupons" 
         element={
-          <ProtectedRoute>
             <Coupons />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/questionnaire" 
         element={
-          <ProtectedRoute>
             <Questionnaire />
-          </ProtectedRoute>
         } 
       />
        <Route 
         path="/ticket" 
         element={
-          <ProtectedRoute>
             <Ticket />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/profile" 
         element={
-          <ProtectedRoute>
             <Profile />
-          </ProtectedRoute>
         } 
       />
       <Route 
         path="/medicalExamination" 
         element={
-          <ProtectedRoute>
             <MedicalExamination />
-          </ProtectedRoute>
+        } 
+      />
+
+         <Route 
+        path="/driver" 
+        element={
+            <Driver />
         } 
       />
       {/* Перенаправление с корня на главную страницу */}

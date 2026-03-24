@@ -5,13 +5,12 @@ import HealthAnalyzer from './components/HealthAnalyzer';
 import type { HealthAnalysisResult } from './components/HealthAnalyzer';
 import styles from './FacePage.module.scss';
 import { Link } from 'react-router-dom';
-
+import * as faceapi from '@vladmandic/face-api';
 import type { HealthQuestionnaire } from '../../types';
+import { usePDFGenerator } from '../../hooks/usePDFGenerator';
 
-// Временный интерфейс для результата анализа лица
 interface FaceDetectionResult {
   detected: boolean;
-  landmarks?: any[];
   eyeAspectRatio: number;
   mouthOpenness: number;
   symmetry: number;
@@ -30,21 +29,52 @@ export default function FaceScanner() {
   const [analysisResult, setAnalysisResult] = useState<HealthAnalysisResult | null>(null);
   const [faceDetectionStatus, setFaceDetectionStatus] = useState<'checking' | 'success' | 'error' | null>(null);
   const [faceDetectionError, setFaceDetectionError] = useState<string | null>(null);
-  
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  
+  // === Загружаем модели ===
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        await faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models');
+        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+        console.log('✅ Face API модели загружены');
+      } catch (err) {
+        console.error('❌ Ошибка загрузки моделей FaceAPI:', err);
+      }
+    };
+    loadModels();
+  }, []);
 
+  const { contentRef, generatePDF } = usePDFGenerator();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Функция для сохранения PDF
+  const handleSavePDF = async () => {
+  if (!analysisResult || !questionnaireData) return;
+  
+  try {
+    setIsScanning(true);
+    await generatePDF(`health-report-${questionnaireData.userName}`);
+    setShowSaveModal(false);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Ошибка при создании PDF файла');
+  } finally {
+    setIsScanning(false);
+  }
+};
+
+  // === Работа с камерой (остается без изменений) ===
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
         audio: false,
       });
-
       setStream(mediaStream);
       setIsCameraActive(true);
     } catch (error) {
@@ -56,19 +86,23 @@ export default function FaceScanner() {
   useEffect(() => {
     if (isCameraActive && videoRef.current && stream) {
       videoRef.current.srcObject = stream;
-      videoRef.current
-        .play()
-        .catch((err) => console.warn('Video play interrupted:', err));
+      videoRef.current.play().catch((err) => console.warn('Video play interrupted:', err));
     }
   }, [isCameraActive, stream]);
 
   useEffect(() => {
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-      }
+      if (stream) stream.getTracks().forEach((t) => t.stop());
     };
   }, [stream]);
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    setStream(null);
+    setIsCameraActive(false);
+  };
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -87,218 +121,124 @@ export default function FaceScanner() {
     }
   };
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    setStream(null);
-    setIsCameraActive(false);
-  };
-
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const photoData = e.target?.result as string;
-        setPhoto(photoData);
-        checkFaceDetection(photoData);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Функция для валидации обнаружения лица
-  const validateFaceDetection = (faceResult: FaceDetectionResult): boolean => {
-      // Проверяем, было ли обнаружено лицо
-      if (!faceResult.detected) {
-        return false;
-      }
-  
-      // Проверяем качество обнаруженных landmarks
-      if (!faceResult.landmarks || faceResult.landmarks.length < 10) {
-        return false;
-      }
-  
-      // Проверяем, что глаза и рот обнаружены (основные признаки лица)
-      if (faceResult.eyeAspectRatio === 0 || faceResult.mouthOpenness === 0) {
-        return false;
-      }
-  
-      // Проверяем, что симметрия в разумных пределах (не 0 и не 100)
-      if (faceResult.symmetry < 5 || faceResult.symmetry > 95) {
-        return false;
-      }
-  
-      return true;
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const photoData = e.target?.result as string;
+      setPhoto(photoData);
+      checkFaceDetection(photoData);
     };
-
-
-  
-  const simulateFaceAnalysis = (image: HTMLImageElement): Promise<FaceDetectionResult> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Создаем canvas для анализа изображения
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve({
-            detected: false,
-            landmarks: undefined,
-            eyeAspectRatio: 0,
-            mouthOpenness: 0,
-            symmetry: 0
-          });
-          return;
-        }
-
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.drawImage(image, 0, 0);
-
-       
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-
- 
-        const hasFace = analyzeImageForFace(data, canvas.width, canvas.height);
-
-        resolve({
-          detected: hasFace,
-          landmarks: hasFace ? Array(478).fill({}) : undefined, // MediaPipe Face Mesh имеет 478 landmarks
-          eyeAspectRatio: hasFace ? 0.25 + Math.random() * 0.1 : 0,
-          mouthOpenness: hasFace ? 0.05 + Math.random() * 0.1 : 0,
-          symmetry: hasFace ? 70 + Math.random() * 25 : 0
-        });
-      }, 1500);
-    });
+    reader.readAsDataURL(file);
   };
 
-  
+  // === Анализ лица с использованием face-api ===
+  const detectFace = async (photoData: string): Promise<FaceDetectionResult> => {
+    try {
+      const img = await faceapi.fetchImage(photoData);
 
-  // Функция для анализа изображения на наличие лица
-  const analyzeImageForFace = (data: Uint8ClampedArray, width: number, height: number): boolean => {
-    let skinTonePixels = 0;
-    let faceLikeRegions = 0;
+      // Таймаут 5 секунд на случай зависания
+      const timeoutPromise = new Promise<FaceDetectionResult>((resolve) =>
+        setTimeout(() => resolve({ detected: false, eyeAspectRatio: 0, mouthOpenness: 0, symmetry: 0 }), 5000)
+      );
 
-    // Анализируем пиксели для поиска признаков лица
-    for (let y = 0; y < height; y += 4) {
-      for (let x = 0; x < width; x += 4) {
-        const index = (y * width + x) * 4;
-        const r = data[index];
-        const g = data[index + 1];
-        const b = data[index + 2];
+      const detectionPromise = (async () => {
+        const detection = await faceapi
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({
+            scoreThreshold: 0.3,
+            inputSize: 512
+          }))
+          .withFaceLandmarks(true);
 
-        // Проверяем, похож ли цвет на кожу
-        if (isSkinTone(r, g, b)) {
-          skinTonePixels++;
+        if (!detection) {
+          return { detected: false, eyeAspectRatio: 0, mouthOpenness: 0, symmetry: 0 };
         }
-      }
+
+        const landmarks = detection.landmarks;
+        const positions = landmarks.positions;
+
+        // Расчет Eye Aspect Ratio
+        const leftEye = [36, 37, 38, 39, 40, 41];
+        const rightEye = [42, 43, 44, 45, 46, 47];
+
+        const calculateEAR = (eyePoints: number[]) => {
+          const A = distance(positions[eyePoints[1]], positions[eyePoints[5]]);
+          const B = distance(positions[eyePoints[2]], positions[eyePoints[4]]);
+          const C = distance(positions[eyePoints[0]], positions[eyePoints[3]]);
+          return (A + B) / (2 * C);
+        };
+
+        const eyeAspectRatio = (calculateEAR(leftEye) + calculateEAR(rightEye)) / 2;
+
+        // Расчет открытости рта
+        const mouthOpenness = Math.abs(positions[62].y - positions[66].y) /
+          distance(positions[48], positions[54]);
+
+        // Расчет симметрии
+        const symmetry = calculateFaceSymmetry(landmarks);
+
+        return {
+          detected: true,
+          eyeAspectRatio: Math.min(1, eyeAspectRatio * 3),
+          mouthOpenness: Math.min(1, mouthOpenness * 5),
+          symmetry
+        };
+      })();
+
+      return await Promise.race([timeoutPromise, detectionPromise]);
+    } catch (err) {
+      console.error('Ошибка при анализе лица:', err);
+      return { detected: false, eyeAspectRatio: 0, mouthOpenness: 0, symmetry: 0 };
     }
-
-    // Вычисляем процент пикселей цвета кожи
-    const totalPixels = (width * height) / 16; // Учитываем шаг 4x4
-    const skinTonePercentage = (skinTonePixels / totalPixels) * 100;
-
-    // Дополнительные проверки
-    const hasReasonableSize = width > 200 && height > 200;
-    const hasAspectRatio = Math.abs(width / height - 0.75) < 0.2; // Примерное соотношение сторон лица
-    const hasEnoughSkinTone = skinTonePercentage > 15; // Должно быть достаточно цвета кожи
-
-    // Считаем что это лицо если выполняются основные критерии
-    const isLikelyFace = hasReasonableSize && hasEnoughSkinTone;
-
-    console.log('Face detection analysis:', {
-      width,
-      height,
-      skinTonePercentage: skinTonePercentage.toFixed(2),
-      hasReasonableSize,
-      hasAspectRatio,
-      hasEnoughSkinTone,
-      isLikelyFace
-    });
-
-    return isLikelyFace;
   };
 
-  // Функция для определения цвета кожи
-  const isSkinTone = (r: number, g: number, b: number): boolean => {
-    // Преобразуем RGB в YCbCr для лучшего определения цвета кожи
-    const y = 0.299 * r + 0.587 * g + 0.114 * b;
-    const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b;
-    const cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
-
-    // Диапазоны цветов кожи в YCbCr
-    const skinRanges = [
-      { yMin: 80, yMax: 255, cbMin: 85, cbMax: 135, crMin: 135, crMax: 180 }, // Светлая кожа
-      { yMin: 80, yMax: 255, cbMin: 85, cbMax: 135, crMin: 135, crMax: 180 }, // Средняя кожа
-      { yMin: 80, yMax: 255, cbMin: 85, cbMax: 135, crMin: 135, crMax: 180 }, // Темная кожа
-    ];
-
-    return skinRanges.some(range =>
-      y >= range.yMin && y <= range.yMax &&
-      cb >= range.cbMin && cb <= range.cbMax &&
-      cr >= range.crMin && cr <= range.crMax
+  const distance = (point1: any, point2: any): number => {
+    return Math.sqrt(
+      Math.pow(point1.x - point2.x, 2) +
+      Math.pow(point1.y - point2.y, 2)
     );
   };
 
-  /// НОВАЯ ФУНКЦИЯ: Проверка обнаружения лица
-const checkFaceDetection = async (photoData: string) => {
-  setIsScanning(true);
-  setFaceDetectionStatus('checking');
-  setFaceDetectionError(null);
+  const calculateFaceSymmetry = (landmarks: faceapi.FaceLandmarks68): number => {
+    const positions = landmarks.positions;
+    const leftCheek = positions[1];
+    const rightCheek = positions[15];
+    const nose = positions[30];
+    const midX = (leftCheek.x + rightCheek.x) / 2;
+    const symmetry = 100 - Math.abs(midX - nose.x) * 200;
+    return Math.max(0, Math.min(100, symmetry));
+  };
 
-  console.log('Starting face detection for photo:', photoData.substring(0, 100) + '...');
+  // === Проверка фото ===
+  const checkFaceDetection = async (photoData: string) => {
+    setIsScanning(true);
+    setFaceDetectionStatus('checking');
+    setFaceDetectionError(null);
 
-  try {
-    const image = new Image();
-    image.src = photoData;
-    
-    image.onload = async () => {
-      try {
-        console.log('Image loaded, dimensions:', image.width, 'x', image.height);
-        
-        const faceResult = await simulateFaceAnalysis(image);
-        console.log('Face analysis completed:', faceResult);
-        
-        const hasFace = validateFaceDetection(faceResult);
-        
-        if (hasFace) {
-          console.log('Face detected successfully');
-          setFaceDetectionStatus('success');
-          setTimeout(() => {
-            setShowQuestionnaire(true);
-          }, 1000);
-        } else {
-          console.log('Face not detected or validation failed');
-          setFaceDetectionStatus('error');
-          setFaceDetectionError('Лицо не обнаружено на фотографии. Пожалуйста, сделайте четкое фото лица.');
-        }
-      } catch (error) {
-        console.error('Face detection error:', error);
+    try {
+      const faceResult = await detectFace(photoData);
+      console.log('Face detection result:', faceResult);
+
+      if (faceResult.detected) {
+        setFaceDetectionStatus('success');
+        setTimeout(() => setShowQuestionnaire(true), 1000);
+      } else {
         setFaceDetectionStatus('error');
-        setFaceDetectionError('Ошибка при анализе изображения. Пожалуйста, попробуйте снова.');
+        setFaceDetectionError('Лицо не обнаружено. Пожалуйста, сделайте четкое фото.');
       }
-    };
-
-    image.onerror = () => {
-      console.error('Failed to load image');
+    } catch (error) {
+      console.error('Ошибка проверки лица:', error);
       setFaceDetectionStatus('error');
-      setFaceDetectionError('Не удалось загрузить изображение для анализа.');
-    };
+      setFaceDetectionError('Не удалось проанализировать фото.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
-  } catch (error) {
-    console.error('Face detection setup error:', error);
-    setFaceDetectionStatus('error');
-    setFaceDetectionError('Не удалось загрузить изображение для анализа.');
-  }
-};
-
-  const handleQuestionnaireComplete = (questionnaireData: HealthQuestionnaire) => {
-    console.log('Анкета заполнена, данные:', questionnaireData);
-    setQuestionnaireData(questionnaireData);
+  const handleQuestionnaireComplete = (data: HealthQuestionnaire) => {
+    setQuestionnaireData(data);
     setShowQuestionnaire(false);
-
     setTimeout(() => {
       setIsScanning(false);
       setShowResult(true);
@@ -327,15 +267,16 @@ const checkFaceDetection = async (photoData: string) => {
     reset();
   };
 
-  // Компонент для отображения статуса проверки лица
+  // === UI блок статусов (остается без изменений) ===
   const FaceDetectionStatusComponent = () => {
     if (faceDetectionStatus === 'checking') {
       return (
         <div className={styles.faceDetectionStatus}>
           <div className={styles.statusChecking}>
             <div className={styles.spinner}></div>
-            <h3>Проверка фотографии</h3>
-            <p>Ищем лицо на изображении...</p>
+            <h3>Проверка фотографии...</h3>
+            <p>Ищем лицо на изображении</p>
+            <p className={styles.subtitle1}>Примечание: качество фотографии влияет на качество показателей</p>
           </div>
         </div>
       );
@@ -351,15 +292,14 @@ const checkFaceDetection = async (photoData: string) => {
             <div className={styles.requirements}>
               <h4>Требования к фото:</h4>
               <ul>
-                <li>✓ Четкое изображение лица</li>
-                <li>✓ Хорошее освещение</li>
-                <li>✓ Лицо должно занимать большую часть кадра</li>
-                <li>✓ Прямой взгляд в камеру</li>
-                <li>✓ Отсутствие солнцезащитных очков</li>
+                <li>Лицо в центре кадра</li>
+                <li>Хорошее освещение</li>
+                <li>Без очков и головных уборов</li>
+                <li>Прямой взгляд в камеру</li>
               </ul>
             </div>
             <button className={styles.retryButton} onClick={reset}>
-              Сделать новое фото
+              Попробовать снова
             </button>
           </div>
         </div>
@@ -373,6 +313,7 @@ const checkFaceDetection = async (photoData: string) => {
             <div className={styles.successIcon}>✓</div>
             <h3>Лицо обнаружено!</h3>
             <p>Переходим к заполнению анкеты...</p>
+            <p className={styles.subtitle1}>Примечание: качество фотографии влияет на качество показателей</p>
           </div>
         </div>
       );
@@ -388,13 +329,11 @@ const checkFaceDetection = async (photoData: string) => {
           <div className={styles.uploadSection}>
             <h1 className={styles.title}>Сканирование лица</h1>
             <p className={styles.subtitle}>Выберите способ загрузки фотографии</p>
-
             <div className={styles.buttonGroup}>
               <button className={styles.actionButton} onClick={startCamera}>
                 <Camera size={24} />
                 <span>Использовать камеру</span>
               </button>
-
               <button
                 className={styles.actionButton}
                 onClick={() => fileInputRef.current?.click()}
@@ -403,7 +342,6 @@ const checkFaceDetection = async (photoData: string) => {
                 <span>Загрузить фото</span>
               </button>
             </div>
-
             <input
               ref={fileInputRef}
               type="file"
@@ -417,15 +355,8 @@ const checkFaceDetection = async (photoData: string) => {
         {isCameraActive && !photo && (
           <div className={styles.centeredCamera}>
             <div className={styles.videoContainer}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className={styles.videoFeed}
-              />
+              <video ref={videoRef} autoPlay playsInline muted className={styles.videoFeed} />
             </div>
-
             <div className={styles.captureControls}>
               <button className={styles.captureMainButton} onClick={capturePhoto}>
                 Сделать снимок
@@ -437,7 +368,7 @@ const checkFaceDetection = async (photoData: string) => {
           </div>
         )}
 
-        {photo && isScanning && faceDetectionStatus && (
+        {photo && faceDetectionStatus && !showResult && (
           <div className={styles.scanningSection}>
             <div className={styles.photoWrapper}>
               <img src={photo} alt="Captured" className={styles.photo} />
@@ -453,81 +384,79 @@ const checkFaceDetection = async (photoData: string) => {
 
         {showResult && photo && questionnaireData && (
           <div className={`${styles.resultSection} ${resultAnimation ? styles.animate : ''}`}>
-           <div className={styles.leftPanel}>
+            <div className={styles.leftPanel}>
               <div className={styles.photoContainer}>
                 <img src={photo} alt="Scanned face" className={styles.resultPhoto} />
               </div>
-
               <div className={styles.actionButtons}>
                 <button className={styles.resetButton} onClick={reset}>
                   Сканировать другое фото
                 </button>
-
                 <Link to="/coupons">
-                  <button className={styles.ticketButton}>
-                    Взять талон к врачу
-                  </button>
+                  <button className={styles.ticketButton}>Взять талон к врачу</button>
                 </Link>
               </div>
             </div>
-          
-          <div className={styles.rightPanel}>
-  <div className={styles.resultCard}>
-    <h2 className={styles.resultTitle}>Результат анализа</h2>
 
-    <div className={styles.resultContent}>
-      <HealthAnalyzer
-        photo={photo}
-        questionnaireData={questionnaireData}
-        onAnalysisComplete={handleAnalysisComplete}
-      />
-    </div>
+            <div className={styles.rightPanel}>
+              <div className={styles.resultCard}>
+                <h2 className={styles.resultTitle}>Результат анализа</h2>
+                <div className={styles.resultContent}>
+                  <HealthAnalyzer
+                    photo={photo}
+                    questionnaireData={questionnaireData}
+                    onAnalysisComplete={handleAnalysisComplete}
+                    contentRef={contentRef}
+                  />
+                </div>
+                <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
+                  Сохранить
+                </button>
 
-    <button className={styles.saveButton} onClick={() => setShowSaveModal(true)}>
-      Сохранить
-    </button>
-
-    {/* Модальное окно сохранения */}
-    {showSaveModal && (
-      <div className={styles.saveModal}>
-        <div
-          className={styles.saveOverlay}
-          onClick={() => setShowSaveModal(false)}
-        />
-        <div className={styles.saveContent}>
-          <h3>Сохранить результат</h3>
-          <div className={styles.saveActions}>
-            <button >Сохранить в аккаунт</button>
-            <button >Скачать PDF</button>
-          </div>
-          <button
-            className={styles.closeSaveModal}
-            onClick={() => setShowSaveModal(false)}
-          >
-            X
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-
+                {showSaveModal && (
+                  <div className={styles.saveModal}>
+                    <div className={styles.saveOverlay} onClick={() => setShowSaveModal(false)} />
+                    <div className={styles.saveContent}>
+                      <h3>Сохранить результат</h3>
+                      <div className={styles.saveActions}>
+                        <button>Сохранить в аккаунт</button>
+                        <button
+                          onClick={handleSavePDF}
+                          disabled={isGeneratingPDF}
+                          className={styles.pdfButton}
+                        >
+                          {isGeneratingPDF ? (
+                            <>
+                              <div className={styles.spinner}></div>
+                              Создание PDF...
+                            </>
+                          ) : (
+                            '📄 Скачать PDF отчет'
+                          )}
+                        </button>
+                      </div>
+                      <button
+                        className={styles.closeSaveModal}
+                        onClick={() => setShowSaveModal(false)}
+                      >
+                        X
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
-
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
 
-      {/* Модальное окно с анкетой */}
       {showQuestionnaire && (
         <div className={styles.questionnaireModal}>
           <div className={styles.questionnaireOverlay} onClick={handleQuestionnaireClose} />
           <div className={styles.questionnaireContent}>
             <Questionnaire onComplete={handleQuestionnaireComplete} />
-            <button
-              className={styles.closeQuestionnaire}
-              onClick={handleQuestionnaireClose}
-            >
+            <button className={styles.closeQuestionnaire} onClick={handleQuestionnaireClose}>
               ×
             </button>
           </div>

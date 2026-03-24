@@ -3,6 +3,7 @@ export interface Clinic {
   name: string;
   address: string;
   city: string;
+  coordinates: [number, number];
 }
 
 export interface Doctor {
@@ -31,7 +32,7 @@ export interface BookingFormData {
 export interface HealthQuestionnaire {
   id?: string;
   userId?: string;
-  userEmail: string;
+  userName: string;
   age: number;
   gender: string;
   hasChronicDiseases: boolean;
